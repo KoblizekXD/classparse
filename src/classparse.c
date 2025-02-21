@@ -26,14 +26,14 @@ int read_32(FILE *stream, uint32_t *var)
 #define read_8(SAVE_TO) if (fread(&SAVE_TO, sizeof(uint8_t), 1, stream) != 1)
 #define checked_malloc(DEF, SIZE) temp_ptr = malloc(SIZE); if (temp_ptr == NULL) { errno = ENOMEM; return NULL; } DEF = temp_ptr
 
-static ConstantPool *read_cp(uint16_t count, FILE *stream)
+static ConstantPool read_cp(uint16_t count, FILE *stream)
 {
     uint16_t ui;
     uint32_t ui32;
     void *temp_ptr;
-    checked_malloc(ConstantPool *cp, sizeof(ConstantPoolEntry) * count);
+    checked_malloc(ConstantPool cp, sizeof(ConstantPoolEntry) * count);
     for (uint16_t i = 0; i < count; i++) {
-        ConstantPoolEntry *entry = cp[i];
+        ConstantPoolEntry *entry = &cp[i];
         read_8(entry->tag) {
             errno = ENOMEM;
             return NULL;
@@ -41,19 +41,19 @@ static ConstantPool *read_cp(uint16_t count, FILE *stream)
         switch (entry->tag) {
             case CONSTANT_Class:
                 read_16(stream, &ui);
-                entry->info._class.name = &cp[ui - 1]->info.utf8;
+                entry->info._class.name = &cp[ui - 1].info.utf8;
                 break;
             case CONSTANT_Fieldref:
             case CONSTANT_InterfaceMethodref:
             case CONSTANT_Methodref:
                 read_16(stream, &ui);
-                entry->info.member_ref.class_info->name = &cp[ui - 1]->info.utf8;
+                entry->info.member_ref.class_info->name = &cp[ui - 1].info.utf8;
                 read_16(stream, &ui);
-                entry->info.member_ref.name_and_type->name = &cp[ui - 1]->info.utf8;
+                entry->info.member_ref.name_and_type->name = &cp[ui - 1].info.utf8;
                 break;
             case CONSTANT_String:
                 read_16(stream, &ui);
-                entry->info.string.string = &cp[ui - 1]->info.utf8;
+                entry->info.string.string = &cp[ui - 1].info.utf8;
                 break;
             case CONSTANT_Integer:
             case CONSTANT_Float:
@@ -70,9 +70,9 @@ static ConstantPool *read_cp(uint16_t count, FILE *stream)
                 break;
             case CONSTANT_NameAndType:
                 read_16(stream, &ui);
-                entry->info.name_and_type.name = &cp[ui - 1]->info.utf8;
+                entry->info.name_and_type.name = &cp[ui - 1].info.utf8;
                 read_16(stream, &ui);
-                entry->info.name_and_type.descriptor = &cp[ui - 1]->info.utf8;
+                entry->info.name_and_type.descriptor = &cp[ui - 1].info.utf8;
                 break;
             case CONSTANT_Utf8:
                 read_16(stream, &ui);
@@ -86,23 +86,23 @@ static ConstantPool *read_cp(uint16_t count, FILE *stream)
 
                 read_8(entry->info.mh.reference_kind) return NULL;
                 read_16(stream, &ui);
-                entry->info.mh.member_ref = &cp[ui - 1]->info.member_ref;
+                entry->info.mh.member_ref = &cp[ui - 1].info.member_ref;
                 break;
             case CONSTANT_MethodType:
                 read_16(stream, &ui);
-                entry->info.mt.descriptor = &cp[ui - 1]->info.utf8;
+                entry->info.mt.descriptor = &cp[ui - 1].info.utf8;
                 break;
             case CONSTANT_Dynamic:
             case CONSTANT_InvokeDynamic:
                 read_16(stream, &ui);
                 entry->info.inv_dyn.bootstrap_method_attr_index = ui;
                 read_16(stream, &ui);
-                entry->info.inv_dyn.name_and_type = &cp[ui - 1]->info.name_and_type;
+                entry->info.inv_dyn.name_and_type = &cp[ui - 1].info.name_and_type;
                 break;
             case CONSTANT_Module:
             case CONSTANT_Package:
                 read_16(stream, &ui);
-                entry->info.mod_package.name = &cp[ui - 1]->info.utf8;
+                entry->info.mod_package.name = &cp[ui - 1].info.utf8;
                 break;
             default:
                 fprintf(stderr, "Cannot interpret constant pool tag: %d\n", entry->tag);
@@ -131,6 +131,7 @@ ClassFile *ReadFromStream(FILE *stream)
     read_16(stream, &cf->major_version);
     read_16(stream, &cf->contant_pool_size);
     cf->contant_pool_size--;
+    cf->constant_pool = read_cp(cf->contant_pool_size, stream);
 
     return cf;
 }

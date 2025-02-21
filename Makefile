@@ -2,7 +2,7 @@ CC := gcc
 LD := gcc
 
 BUILD   := build
-OUTPUT  := $(BUILD)/classparse.so
+OUTPUT  := $(BUILD)/libclassparse.so
 INCLUDE := include
 SRC     := src
 
