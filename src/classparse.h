@@ -252,7 +252,7 @@ typedef struct {
     char *descriptor;
     char *name;
     void *value;
-    size_t attribute_count;
+    uint16_t attribute_count;
     AttributeInfo *attributes;
 } Field;
 
@@ -265,7 +265,7 @@ typedef struct {
     uint32_t code_length;
     uint8_t *code;
     void *native_bind;
-    size_t attribute_count;
+    uint16_t attribute_count;
     AttributeInfo *attributes;
 } Method;
 
@@ -287,8 +287,36 @@ typedef struct {
     Field *fields;
     uint16_t method_count;
     Method *methods;
-    size_t attribute_count;
+    uint16_t attribute_count;
     AttributeInfo *attributes;
 } ClassFile;
+
+// ===================================================== FUNCTIONS
+
+/**
+ * Attempts to read a standard JVM class file object from the given stream.
+ * The class file is read in big endian format, but the `class_file` structure
+ * stores them in the native host endinness. The passing stream is not closed automatically.
+ *
+ * If the reading fails, the function will return NULL, with corresponding errno set.
+ * Otherwise, a dynamically allocated pointer will be returned(don't forget to free it).
+ */
+ClassFile *ReadFromStream(FILE *stream);
+
+/**
+ * Attempts to read a standard JVM class file object from the given pointer.
+ * The class file is read in big endian format, but the `class_file` structure
+ * stores them in the native host endinness. The passing stream is not closed automatically.
+ *
+ * If the reading fails, the function will return NULL, with corresponding errno set.
+ * Otherwise, a dynamically allocated pointer will be returned(don't forget to free it).
+ */
+ClassFile *ReadFrom(uintptr_t ptr);
+
+/**
+ * Frees given class file.
+ * No error will appear if operation fails.
+ */
+void FreeClassFile(ClassFile *cf);
 
 #endif // CLASSPARSE_H
