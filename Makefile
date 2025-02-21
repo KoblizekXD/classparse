@@ -2,11 +2,12 @@ CC := gcc
 LD := gcc
 
 BUILD   := build
-OUTPUT  := $(BUILD)/main
+OUTPUT  := $(BUILD)/classparse.so
 INCLUDE := include
 SRC     := src
 
-CFLAGS := -Wall -Wextra -O2 -std=gnu11 -I $(SRC) -I $(INCLUDE)
+CFLAGS  := -Wall -Wextra -shared -fPIC -O0 -pg -g -std=gnu11 -I $(SRC) -I $(INCLUDE)
+LDFLAGS := -g -pg -shared -fPIC
 
 CFILES := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
 OBJ    := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o)) 

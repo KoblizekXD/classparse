@@ -1,8 +1,6 @@
 #ifndef CLASSPARSE_H
 #define CLASSPARSE_H
 
-#include <endian.h>
-#include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -264,7 +262,6 @@ typedef struct {
     uint16_t max_locals;
     uint32_t code_length;
     uint8_t *code;
-    void *native_bind;
     uint16_t attribute_count;
     AttributeInfo *attributes;
 } Method;
@@ -276,12 +273,12 @@ typedef struct {
     uint16_t minor_version;
     uint16_t major_version;
     uint16_t access_flags;
-    size_t contant_pool_size;
+    uint16_t contant_pool_size;
     ConstantPool constant_pool;
     char *name;
     uint8_t has_superclass;
     char *super_name;
-    size_t interface_count;
+    uint16_t interface_count;
     char **interfaces;
     uint16_t field_count;
     Field *fields;
