@@ -82,7 +82,7 @@
 
 // ===================================================== CONSTANT POOL 
 
-typedef const char *Utf8Info;
+typedef char *Utf8Info;
 
 typedef struct {
     Utf8Info *name;

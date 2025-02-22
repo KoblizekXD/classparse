@@ -16,7 +16,7 @@ int read_16(FILE *stream, uint16_t *var)
 
 int read_32(FILE *stream, uint32_t *var)
 {
-    uint16_t temp;
+    uint32_t temp;
     if (fread(&temp, sizeof(uint32_t), 1, stream) != 1)
         return 0;
     *var = be32toh(temp);
@@ -47,9 +47,9 @@ static ConstantPool read_cp(uint16_t count, FILE *stream)
             case CONSTANT_InterfaceMethodref:
             case CONSTANT_Methodref:
                 read_16(stream, &ui);
-                entry->info.member_ref.class_info->name = &cp[ui - 1].info.utf8;
+                entry->info.member_ref.class_info = &cp[ui - 1].info._class;
                 read_16(stream, &ui);
-                entry->info.member_ref.name_and_type->name = &cp[ui - 1].info.utf8;
+                entry->info.member_ref.name_and_type = &cp[ui - 1].info.name_and_type;
                 break;
             case CONSTANT_String:
                 read_16(stream, &ui);
@@ -76,14 +76,13 @@ static ConstantPool read_cp(uint16_t count, FILE *stream)
                 break;
             case CONSTANT_Utf8:
                 read_16(stream, &ui);
-                char* addr = malloc(ui + 1);
-                int result = fread(addr, sizeof(uint8_t), ui, stream);
+                entry->info.utf8 = malloc(ui + 1);
+                int result = fread(entry->info.utf8, sizeof(char), ui, stream);
                 if (result != ui)
                     return NULL;
-                addr[ui] = '\0';
+                entry->info.utf8[ui] = '\0';
                 break;
             case CONSTANT_MethodHandle:
-
                 read_8(entry->info.mh.reference_kind) return NULL;
                 read_16(stream, &ui);
                 entry->info.mh.member_ref = &cp[ui - 1].info.member_ref;
@@ -132,6 +131,19 @@ ClassFile *ReadFromStream(FILE *stream)
     read_16(stream, &cf->contant_pool_size);
     cf->contant_pool_size--;
     cf->constant_pool = read_cp(cf->contant_pool_size, stream);
-
+    read_16(stream, &cf->access_flags);
+    uint16_t classIndex;
+    read_16(stream, &classIndex);
+    cf->name = *cf->constant_pool[classIndex - 1].info._class.name;
+    read_16(stream, &classIndex);
+    if (classIndex == 0)
+        cf->super_name = "Object";
+    else cf->super_name = *cf->constant_pool[classIndex - 1].info._class.name;
+    read_16(stream, &cf->interface_count);
+    cf->interfaces = malloc(sizeof(char*) * cf->interface_count);
+    for (size_t i = 0; i < cf->interface_count; i++) {
+        read_16(stream, &classIndex);
+        cf->interfaces[i] = *cf->constant_pool[classIndex - 1].info._class.name;
+    }
     return cf;
 }
