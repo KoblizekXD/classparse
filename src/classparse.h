@@ -296,23 +296,67 @@ typedef struct {
  *
  * If the reading fails, the function will return NULL, with corresponding errno set.
  * Otherwise, a dynamically allocated pointer will be returned(don't forget to free it).
+ * Please note that if function fails, all previously allocated resources will leak, so you're better just letting
+ * the program crash!
+ *
+ * @param stream The passing stream, must not be NULL.
  */
 ClassFile *ReadFromStream(FILE *stream);
 
 /**
  * Attempts to read a standard JVM class file object from the given pointer.
  * The class file is read in big endian format, but the `class_file` structure
- * stores them in the native host endinness. The passing stream is not closed automatically.
+ * stores them in the native host endinness.
  *
  * If the reading fails, the function will return NULL, with corresponding errno set.
  * Otherwise, a dynamically allocated pointer will be returned(don't forget to free it).
+ * Please note that if function fails, all previously allocated resources will leak, so you're better just letting
+ * the program crash!
+ *
+ * @param ptr Pointer on where the reading should start.
  */
 ClassFile *ReadFrom(uintptr_t ptr);
 
 /**
  * Frees given class file.
  * No error will appear if operation fails.
+ *
+ * @param cf Classfile to free.
  */
 void FreeClassFile(ClassFile *cf);
+
+/**
+ * Locates a method with the given name from the given classfile.
+ * If no such method is found, NULL is returned.
+ */
+Method *GetMethodByName(ClassFile *cf, const char *name);
+
+/**
+ * Locates a field with the given name from the given classfile.
+ * If no such field is found, NULL is returned.
+ */
+Field *GetFieldByName(ClassFile *cf, const char *name);
+
+/**
+ * Locates the first found attribute with specified name from the provided array.
+ * If no such attribute is found, NULL is returned.
+ */
+AttributeInfo *GetAttributeByName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
+
+/**
+ * Locates the first found attribute with specified synthetic identifier from the provided array.
+ * If no such attribute is found, NULL is returned.
+ */
+AttributeInfo *GetAttributeBySyntheticIdentifier(AttributeInfo *attributes, uint16_t attribute_count, int id);
+
+/**
+ * Returns 1 if the attribute with given synthetic identifier is present in the array. 0 Otherwise.
+ */
+int HasAttributeWithId(AttributeInfo *attributes, uint16_t attribute_count, int id);
+
+/**
+ * Returns 1 if the attribute with given name is present in the array. 0 Otherwise.
+ */
+int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
 
 #endif // CLASSPARSE_H

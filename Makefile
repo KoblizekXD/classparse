@@ -12,9 +12,13 @@ LDFLAGS := -g -pg -shared -fPIC
 CFILES := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
 OBJ    := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o)) 
 
-.PHONY: all run clean
+.PHONY: all run clean examples clean-all
 
-all: $(OUTPUT)
+all: examples
+
+examples: $(OUTPUT)
+	@printf "\033[32m==> Building examples\033[0m\n"
+	$(MAKE) -C examples/
 
 run: $(OUTPUT)
 	chmod +x $(OUTPUT)
@@ -25,6 +29,11 @@ clean:
 	@printf "\033[32m==> Clean up\033[0m\n"
 	rm -rf $(BUILD)
 	mkdir -p $(BUILD)
+
+clean-all: clean
+	@printf "\033[32m==> Clean up\033[0m\n"
+	rm -rf examples/build/
+	mkdir -p examples/build/
 
 $(OUTPUT): $(OBJ)
 	@printf "\033[32m==> Linking object files\033[0m\n"
