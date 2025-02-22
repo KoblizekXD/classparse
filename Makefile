@@ -12,9 +12,17 @@ LDFLAGS := -g -pg -shared -fPIC
 CFILES := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
 OBJ    := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o)) 
 
-.PHONY: all run clean examples clean-all
+.PHONY: all run clean examples clean-all install uninstall
 
 all: examples
+
+install: $(OUTPUT)
+	install $(OUTPUT) /usr/lib/
+	install $(SRC)/classparse.h /usr/include/
+
+uninstall:
+	rm -f /usr/include/classparse.h
+	rm -f /usr/lib/libclassparse.so
 
 examples: $(OUTPUT)
 	@printf "\033[32m==> Building examples\033[0m\n"
