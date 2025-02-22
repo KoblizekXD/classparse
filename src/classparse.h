@@ -48,37 +48,37 @@
 #define ACC_MODULE	     0x8000
 
 // Types of attributes
-#define ATTR_UNKNOWN                            0
-#define CONSTANT_VALUE                          1
-#define CODE                                    2
-#define STACK_MAP_TABLE                         3
-#define EXCEPTIONS                              4
-#define INNER_CLASSES                           5
-#define ENCLOSING_METHOD                        6
-#define SYNTHETIC                               7
-#define SIGNATURE                               8
-#define SOURCE_FILE                             9
-#define SOURCE_DEBUG_EXTENSION                  10
-#define LINE_NUMBER_TABLE                       11
-#define LOCAL_VARIABLE_TABLE                    12
-#define LOCAL_VARIABLE_TYPE_TABLE               13
-#define DEPRECATED                              14
-#define RUNTIME_VISIBLE_ANNOTATIONS             15
-#define RUNTIME_INVISIBLE_ANNOTATIONS           16
-#define RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS   17
-#define RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS 18
-#define RUNTIME_VISIBLE_TYPE_ANNOTATIONS        19
-#define RUNTIME_INVISIBLE_TYPE_ANNOTATIONS      20
-#define ANNOTATION_DEFAULT                      21
-#define BOOTSTRAP_METHODS                       22
-#define METHOD_PARAMETERS                       23
-#define MODULE                                  24
-#define MODULE_PACKAGES                         25
-#define MODULE_MAIN_CLASS                       26
-#define NEST_HOST                               27
-#define NEST_MEMBERS                            28
-#define RECORD                                  29
-#define PERMITTED_SUBCLASSES                    30
+#define ATTR_UNKNOWN                                    0
+#define ATTR_CONSTANT_VALUE                             1
+#define ATTR_CODE                                       2
+#define ATTR_STACK_MAP_TABLE                            3
+#define ATTR_EXCEPTIONS                                 4
+#define ATTR_INNER_CLASSES                              5
+#define ATTR_ENCLOSING_METHOD                           6
+#define ATTR_SYNTHETIC                                  7
+#define ATTR_SIGNATURE                                  8
+#define ATTR_SOURCE_FILE                                9
+#define ATTR_SOURCE_DEBUG_EXTENSION                     10
+#define ATTR_LINE_NUMBER_TABLE                          11
+#define ATTR_LOCAL_VARIABLE_TABLE                       12
+#define ATTR_LOCAL_VARIABLE_TYPE_TABLE                  13
+#define ATTR_DEPRECATED                                 14  
+#define ATTR_RUNTIME_VISIBLE_ANNOTATIONS                15
+#define ATTR_RUNTIME_INVISIBLE_ANNOTATIONS              16
+#define ATTR_RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS      17
+#define ATTR_RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS    18
+#define ATTR_RUNTIME_VISIBLE_TYPE_ANNOTATIONS           19
+#define ATTR_RUNTIME_INVISIBLE_TYPE_ANNOTATIONS         20
+#define ATTR_ANNOTATION_DEFAULT                         21
+#define ATTR_BOOTSTRAP_METHODS                          22
+#define ATTR_METHOD_PARAMETERS                          23
+#define ATTR_MODULE                                     24
+#define ATTR_MODULE_PACKAGES                            25
+#define ATTR_MODULE_MAIN_CLASS                          26
+#define ATTR_NEST_HOST                                  27
+#define ATTR_NEST_MEMBERS                               28
+#define ATTR_RECORD                                     29
+#define ATTR_PERMITTED_SUBCLASSES                       30
 
 // ===================================================== CONSTANT POOL 
 
@@ -162,10 +162,10 @@ typedef struct {
     uint8_t* code;
     uint16_t exception_table_length;
     struct _exc_table {
-        uint16_t start_pc;
-        uint16_t end_pc;
-        uint16_t handler_pc;
-        uint16_t catch_type;
+        uint8_t *start_pc;
+        uint8_t *end_pc;
+        uint8_t *handler_pc;
+        ClassInfo *catch_type;
     } *exception_table;
     uint16_t attributes_count;
     AttributeInfo *attributes;
@@ -193,7 +193,7 @@ typedef struct {
     struct bootstrap_method {
         MethodHandleInfo *bootstrap_method;
         uint16_t bootstrap_arg_length;
-        MethodHandleInfo **bootstrap_args;
+        ConstantPoolEntry **bootstrap_args;
     } *bootstrap_methods;
 } BootstrapMethodsAttribute;
 
@@ -276,7 +276,6 @@ typedef struct {
     uint16_t contant_pool_size;
     ConstantPool constant_pool;
     char *name;
-    uint8_t has_superclass;
     char *super_name;
     uint16_t interface_count;
     char **interfaces;

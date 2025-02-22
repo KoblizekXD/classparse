@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+extern AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length, void *declared_by);
+
 int read_16(FILE *stream, uint16_t *var)
 {
     uint16_t temp;
@@ -145,5 +147,6 @@ ClassFile *ReadFromStream(FILE *stream)
         read_16(stream, &classIndex);
         cf->interfaces[i] = *cf->constant_pool[classIndex - 1].info._class.name;
     }
+    read_16(stream, &cf->field_count);
     return cf;
 }
