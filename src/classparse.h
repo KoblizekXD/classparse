@@ -305,8 +305,8 @@ ClassFile *ReadFromStream(FILE *stream);
 
 /**
  * Attempts to read a standard JVM class file object from the given pointer.
- * The class file is read in big endian format, but the `class_file` structure
- * stores them in the native host endinness.
+ * This will fail if the classfile is in big endian format. It is thus recommended to first convert the classfile
+ * into a little endian format, as that will allow easy pointer support.
  *
  * If the reading fails, the function will return NULL, with corresponding errno set.
  * Otherwise, a dynamically allocated pointer will be returned(don't forget to free it).
@@ -316,6 +316,18 @@ ClassFile *ReadFromStream(FILE *stream);
  * @param ptr Pointer on where the reading should start.
  */
 ClassFile *ReadFrom(uintptr_t ptr);
+
+#define OUTPUT_LE 0
+#define OUTPUT_BE 1
+
+/**
+ * Writes a parsed classfile into a writable stream.
+ *
+ * @param cf The classfile that will be written into a JVM-compatible structure.
+ * @param stream The stream to write to.
+ * @target Either OUTPUT_LE or OUTPUT_BE, resulting endianness of the classfile.
+ */
+int WriteToStream(ClassFile *cf, FILE *stream, int target);
 
 /**
  * Frees given class file.
