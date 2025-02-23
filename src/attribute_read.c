@@ -78,7 +78,7 @@ AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length,
                     item->data.code.exception_table[j].catch_type = &pool[ui - 1].info._class;
                 }
                 read_16(stream, &item->data.code.attributes_count);
-                read_attributes(stream, pool, item->data.code.attributes_count, &item->data.code);
+                item->data.code.attributes = read_attributes(stream, pool, item->data.code.attributes_count, &item->data.code);
                 break;
             }
             case ATTR_STACK_MAP_TABLE:
@@ -131,7 +131,7 @@ AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length,
                 break;
             case ATTR_LINE_NUMBER_TABLE: {
                 read_16(stream, &item->data.line_number_table.line_number_table_length);
-                item->data.line_number_table.line_number_table = malloc(sizeof(struct line_number_table*) * item->data.line_number_table.line_number_table_length);
+                item->data.line_number_table.line_number_table = malloc(sizeof(struct line_number_table) * item->data.line_number_table.line_number_table_length);
                 for (uint16_t j = 0; j < item->data.line_number_table.line_number_table_length; j++) {
                     read_16(stream, &ui);
                     item->data.line_number_table.line_number_table[j].start_pc = ((CodeAttribute*) declared_by)->code + (ui - 1);

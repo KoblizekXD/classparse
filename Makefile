@@ -6,8 +6,8 @@ OUTPUT  := $(BUILD)/libclassparse.so
 INCLUDE := include
 SRC     := src
 
-CFLAGS  := -Wall -Wextra -shared -fPIC -O0 -pg -g -std=gnu11 -I $(SRC) -I $(INCLUDE)
-LDFLAGS := -g -pg -shared -fPIC
+CFLAGS  := -Wall -Wextra -Wpedantic -Wconversion -fsanitize=address -fPIC -O0 -g -std=gnu11 -I $(SRC) -I $(INCLUDE)
+LDFLAGS := -g -pg -fsanitize=address -shared -fPIC
 
 CFILES := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
 OBJ    := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o)) 

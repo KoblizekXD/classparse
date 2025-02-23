@@ -4,6 +4,7 @@
 
 void free_attribute_array(AttributeInfo *attributes, uint16_t length)
 {
+    if (attributes == NULL) return;
     for (uint16_t i = 0; i < length; i++) {
         AttributeInfo *item = &attributes[i];
         switch (item->synth_attribute_type) {

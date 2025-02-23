@@ -1,7 +1,7 @@
 CC := gcc
 
 BUILD  := build
-CFLAGS := -Wall -Wextra -g -L ../build/ -lclassparse -pg -std=gnu11 -I ../src/
+CFLAGS := -Wall -Wextra -g -L ../build/ -lclassparse -fsanitize=address -std=gnu11 -I ../src/
 CFILES := $(shell find -L * -type f -name '*.c' | LC_ALL=C sort)
 OUT    := $(addprefix $(BUILD)/,$(CFILES:.c=.out))
 
