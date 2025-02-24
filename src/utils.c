@@ -49,3 +49,28 @@ int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, co
     }
     return 0;
 }
+
+size_t GetFieldValueSize(Field *field)
+{
+    if (!field || !field->descriptor) {
+        return 0;
+    }
+    
+    char *descriptor = field->descriptor;
+    
+    switch (descriptor[0]) {
+        case 'B': return 1;
+        case 'C': return 2;
+        case 'D': return 8;
+        case 'F': return 4;
+        case 'I': return 4;
+        case 'J': return 8;
+        case 'S': return 2;
+        case 'Z': return 1; 
+        case 'L': 
+        case '[': 
+            return sizeof(void*);
+        default:
+            return 0;
+    }
+}

@@ -371,4 +371,19 @@ int HasAttributeWithId(AttributeInfo *attributes, uint16_t attribute_count, int 
  */
 int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
 
+/**
+ * Returns the size of the field's value in bytes.
+ * This depends on the descriptor of the field:
+ * B	byte	    1
+ * C	char	    2
+ * D	double	    8
+ * F	float	    4
+ * I	int         4
+ * J	long	    8
+ * S	short	    2
+ * Z	boolean	    1
+ * L    reference   4-8
+ */
+size_t GetFieldValueSize(Field *field);
+
 #endif // CLASSPARSE_H
