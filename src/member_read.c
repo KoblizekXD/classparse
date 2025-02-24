@@ -27,15 +27,29 @@ Field *read_fields(FILE *stream, ConstantPool pool, uint16_t length)
 Method *read_methods(FILE *stream, ConstantPool pool, uint16_t length)
 {
     Method *methods = malloc(sizeof(Method) * length);
-    uint16_t ui;
     for (uint16_t i = 0; i < length; i++) {
-        read_16(stream, &methods[i].access_flags);
-        read_16(stream, &ui);
-        methods[i].name = pool[ui - 1].info.utf8;
-        read_16(stream, &ui);
-        methods[i].descriptor = pool[ui - 1].info.utf8;
-        read_16(stream, &methods[i].attribute_count);
-        methods[i].attributes = read_attributes(stream, pool, methods[i].attribute_count, NULL);
+        Method *method = &methods[i];
+        read_16(stream, &method->access_flags);
+        uint16_t name_index, descriptor_index;
+        read_16(stream, &name_index);
+        method->name = pool[name_index - 1].info.utf8;
+        read_16(stream, &descriptor_index);
+        method->descriptor = pool[descriptor_index - 1].info.utf8;
+        read_16(stream, &method->attribute_count);
+        method->attributes = read_attributes(stream, pool, method->attribute_count, NULL);
+
+        AttributeInfo *attr = GetAttributeBySyntheticIdentifier(method->attributes, method->attribute_count, ATTR_CODE);
+
+        if (attr) {
+            method->code = attr->data.code.code;
+            method->code_length = attr->data.code.code_length;
+            method->max_stack = attr->data.code.max_stack;
+            method->max_locals = attr->data.code.max_locals;
+        } else {
+            method->code = NULL;
+            method->code_length = method->max_stack = method->max_locals = NOCODE;
+        }
+
     }
     return methods;
 }
