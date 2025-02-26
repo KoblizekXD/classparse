@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <classparse.h>
 
-int main()
+int main(int argc, char **argv)
 {
-    FILE* f = fopen("Main.class", "rb");
+    if (argc == 1) {
+        fprintf(stderr, "Please provide a path to a classfile as a parameter!\n");
+        return 0;
+    }
+    FILE* f = fopen(argv[1], "rb");
     ClassFile* cf = ReadFromStream(f);
     fclose(f);
     FreeClassFile(cf);
