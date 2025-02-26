@@ -42,7 +42,7 @@ int WriteToStream(ClassFile *cf, FILE *stream, int target)
     checked(write16(stream, cf->contant_pool_size, target));
     checked(write_cp(cf->constant_pool, cf->contant_pool_size, stream, target));
     checked(write16(stream, cf->access_flags, target));
-    checked(write16(stream, cf->name, target));
+    checked(write16(stream, ((uintptr_t) &cf->constant_pool[0]) - (uintptr_t) cf->name, target));
     return 1;
 }
 

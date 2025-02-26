@@ -5,5 +5,4 @@ if [ ! -f Makefile ]; then
     exit 1
 fi
 
-make clean-all && make debug
-gdb ./examples/main
+make clean-all && make debug && gdb ./examples/main
