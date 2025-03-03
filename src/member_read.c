@@ -17,6 +17,7 @@ Field *read_fields(FILE *stream, ConstantPool pool, uint16_t length)
         fields[i].name = pool[ui - 1].info.utf8;
         read_16(stream, &ui);
         fields[i].descriptor = pool[ui - 1].info.utf8;
+        fields[i].field_size = GetFieldValueSize(&fields[i]);
         read_16(stream, &fields[i].attribute_count);
         fields[i].value = NULL;
         fields[i].attributes = read_attributes(stream, pool, fields[i].attribute_count, NULL);

@@ -459,6 +459,7 @@ typedef struct {
     char *descriptor;
     char *name;
     void *value;
+    uint8_t field_size;
     uint16_t attribute_count;
     AttributeInfo *attributes;
 } Field;
