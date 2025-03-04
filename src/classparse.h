@@ -596,6 +596,16 @@ int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, co
  */
 size_t GetFieldValueSize(Field *field);
 
+/**
+ * Returns the parameter count of a method. This is parsed from the
+ * method's descriptor.
+ */
 size_t GetParameterCount(Method *method);
+
+/**
+ * Returns the size of a parameter in given method on given offset(0+).
+ * The function may return -1 under some circumstances(invalid offset etc.).
+ */
+size_t GetParameterSize(Method *method, uint16_t offset);
 
 #endif // CLASSPARSE_H

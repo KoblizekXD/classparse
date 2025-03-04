@@ -110,3 +110,59 @@ size_t GetParameterCount(Method *method)
 
     return count;
 }
+
+size_t GetParameterSize(Method *method, uint16_t offset)
+{
+    char *descriptor = method->descriptor;
+    size_t count = 0;
+    size_t length = strlen(descriptor);
+
+    for (size_t i = 0; i < length; i++) {
+        char c = descriptor[i];
+
+        if (strchr(PRIMITIVE_DESC_TYPES, c)) {
+            if (count == offset) {
+                switch (c) {
+                    case 'D':
+                    case 'J':
+                        return 8;
+                    case 'B':
+                    case 'Z':
+                    case 'C':
+                        return 1;
+                    case 'F':
+                    case 'I':
+                        return 4;
+                    case 'S':
+                        return 2;
+                }
+            }
+            count++;
+        } else if (c == 'L') {
+            i++;
+            while (descriptor[i] != ';') {
+                i++;
+            }
+            if (count == offset) {
+                return sizeof(void*);
+            }
+            count++;
+        } else if (c == '[') {
+            while (descriptor[i] == '[') {
+                i++;
+            }
+            if (descriptor[i] == 'L') {
+                while (descriptor[i] != ';') {
+                    i++;
+                }
+            }
+            if (count == offset) {
+                return sizeof(void*);
+            }
+            count++;
+            i--;
+        }
+    }
+
+    return -1;
+}
