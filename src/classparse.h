@@ -596,4 +596,6 @@ int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, co
  */
 size_t GetFieldValueSize(Field *field);
 
+size_t GetParameterCount(Method *method);
+
 #endif // CLASSPARSE_H

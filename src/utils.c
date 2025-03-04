@@ -74,3 +74,39 @@ size_t GetFieldValueSize(Field *field)
             return 0;
     }
 }
+
+const char *PRIMITIVE_DESC_TYPES = "BCDFIJSZ";
+
+size_t GetParameterCount(Method *method)
+{
+    char *descriptor = method->descriptor;
+    size_t count = 0;
+    size_t length = strlen(descriptor);
+
+    for (size_t i = 0; i < length; i++) {
+        char c = descriptor[i];
+
+        if (strchr(PRIMITIVE_DESC_TYPES, c)) {
+            count++;
+        } else if (c == 'L') {
+            i++;
+            while (descriptor[i] != ';') {
+                i++;
+            }
+            count++;
+        } else if (c == '[') {
+            while (descriptor[i] == '[') {
+                i++;
+            }
+            if (descriptor[i] == 'L') {
+                while (descriptor[i] != ';') {
+                    i++;
+                }
+            }
+            count++;
+            i--;
+        }
+    }
+
+    return count;
+}
