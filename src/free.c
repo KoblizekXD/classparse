@@ -28,6 +28,12 @@ void free_attribute_array(AttributeInfo *attributes, uint16_t length)
             case ATTR_LINE_NUMBER_TABLE:
                 free(item->data.line_number_table.line_number_table);
                 break;
+            case ATTR_RUNTIME_INVISIBLE_ANNOTATIONS:
+                for (size_t j = 0; j < item->data.invisible_annotations.annotations_length; j++) {
+                    free(item->data.invisible_annotations.annotations[j].pairs);
+                }
+                free(item->data.invisible_annotations.annotations);
+                break;
         }
     }
     free(attributes);
