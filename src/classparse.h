@@ -434,6 +434,52 @@ typedef struct {
     Utf8Info *sourcefile;
 } SourceFileAttribute;
 
+struct _annotation_kv_pair;
+
+typedef struct _annotation {
+    Utf8Info *type;
+    uint16_t element_value_pair_count;
+    struct _annotation_kv_pair *pairs;
+} Annotation;
+
+typedef struct _annotation_kv_pair {
+    Utf8Info *name;
+    /**
+     * B	byte	                const_value_index	CONSTANT_Integer
+     * C	char	                const_value_index	CONSTANT_Integer
+     * D	double	                const_value_index	CONSTANT_Double
+     * F	float	                const_value_index	CONSTANT_Float
+     * I	int	                    const_value_index	CONSTANT_Integer
+     * J	long	                const_value_index	CONSTANT_Long
+     * S	short	                const_value_index	CONSTANT_Integer
+     * Z	boolean	                const_value_index	CONSTANT_Integer
+     * s	String	                const_value_index	CONSTANT_Utf8
+     * e	Enum class	            enum_const_value	Not applicable
+     * c	Class	                class_info_index	Not applicable
+     * @	Annotation interface    annotation_value	Not applicable
+     * [	Array type	            array_value	        Not applicable
+     */
+    uint8_t tag;
+    union {
+        ConstantPoolEntry *const_val;
+        struct {
+            Utf8Info *const_type_name;
+            Utf8Info *const_name;
+        } enum_const_value;
+        Utf8Info *class_info; // return descriptor of given class(see 4.3.3)
+        Annotation annotation;
+        struct {
+            uint16_t num_values;
+            struct element_value *values;
+        } array_value;
+    } value;
+} AnnotationKVPair;
+
+typedef struct {
+    uint16_t annotations_length;
+    Annotation *annotations;
+} RuntimeInvisibleAnnotationsAttribute;
+
 struct _attribute_info {
     Utf8Info attribute_name;
     uint32_t attribute_length;
