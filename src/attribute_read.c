@@ -1,4 +1,5 @@
 #include <classparse.h>
+#include <regex>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -42,6 +43,8 @@ uint8_t translate_attribute_name(char *str)
     
     return ATTR_UNKNOWN;
 }
+
+Annotation _read_annotation(FILE *stream, ConstantPool pool);
 
 AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length, void *declared_by)
 {
@@ -139,10 +142,66 @@ AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length,
                 }
                 break;
             }
+            case ATTR_RUNTIME_INVISIBLE_ANNOTATIONS: {
+                read_16(stream, &item->data.invisible_annotations.annotations_length);
+                item->data.invisible_annotations.annotations = malloc(sizeof(Annotation) * item->data.invisible_annotations.annotations_length);
+                for (size_t i = 0; i < item->data.invisible_annotations.annotations_length; i++) {
+                    item->data.invisible_annotations.annotations[i] = _read_annotation(stream, pool);
+                }
+                break;
+            }
             default:
                 fseek(stream, item->attribute_length, SEEK_CUR);
                 break;
         }
     }
     return info;
+}
+
+Annotation _read_annotation(FILE *stream, ConstantPool pool)
+{
+    Annotation a;
+    uint16_t ui;
+
+    read_16(stream, &ui);
+    a.type = &pool[ui - 1].info.utf8;
+    read_16(stream, &a.element_value_pair_count);
+    a.pairs = malloc(sizeof(struct _annotation_kv_pair) * a.element_value_pair_count);
+    for (size_t i = 0; i < a.element_value_pair_count; i++) {
+        read_16(stream, &ui);
+        a.pairs[i].name = &pool[ui - 1].info.utf8;
+        fread(&a.pairs[i].tag, sizeof(char), 1, stream);
+        char c = a.pairs[i].tag;
+        switch (c) {
+            case 'B':
+            case 'C':
+            case 'D':
+            case 'F':
+            case 'I':
+            case 'J':
+            case 'S':
+            case 'Z':
+            case 's':
+                read_16(stream, &ui);
+                a.pairs[i].value.const_val = &pool[ui - 1];
+                break;
+            case 'e':
+                read_16(stream, &ui);
+                a.pairs[i].value.enum_const_value.const_type_name = &pool[ui - 1].info.utf8;
+                read_16(stream, &ui);
+                a.pairs[i].value.enum_const_value.const_name = &pool[ui - 1].info.utf8;
+                break;
+            case 'c':
+                read_16(stream, &ui);
+                a.pairs[i].value.class_info = &pool[ui - 1].info.utf8;
+                break;
+            case '@':
+                a.pairs[i].value.annotation = _read_annotation(stream, pool);
+                break;
+            case '[':
+                fprintf(stderr, "Reading errors from annotation values is TODO!");
+                break;
+        }
+    }
+    return a;
 }

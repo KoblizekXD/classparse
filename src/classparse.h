@@ -459,7 +459,7 @@ typedef struct _annotation_kv_pair {
      * @	Annotation interface    annotation_value	Not applicable
      * [	Array type	            array_value	        Not applicable
      */
-    uint8_t tag;
+    char tag;
     union {
         ConstantPoolEntry *const_val;
         struct {
@@ -495,6 +495,7 @@ struct _attribute_info {
         DeprecatedAttribute deprecated;
         LineNumberTableAttribute line_number_table;
         SourceFileAttribute sourcefile;
+        RuntimeInvisibleAnnotationsAttribute invisible_annotations;
     } data;
 };
 
