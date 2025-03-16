@@ -6,6 +6,8 @@
 
 extern int read_16(FILE *stream, uint16_t *var);
 extern int read_32(FILE *stream, uint32_t *var);
+extern int read_16_ptr(void *stream, int *cursor, uint16_t *var);
+extern int read_32_ptr(void *stream, int *cursor, uint32_t *var);
 
 uint8_t translate_attribute_name(char *str)
 {
@@ -44,6 +46,7 @@ uint8_t translate_attribute_name(char *str)
 }
 
 Annotation _read_annotation(FILE *stream, ConstantPool pool);
+Annotation _read_annotation_ptr(void *at, int *cursor, ConstantPool pool);
 
 AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length, void *declared_by)
 {
@@ -192,6 +195,166 @@ Annotation _read_annotation(FILE *stream, ConstantPool pool)
                 break;
             case 'c':
                 read_16(stream, &ui);
+                a.pairs[i].value.class_info = &pool[ui - 1].info.utf8;
+                break;
+            case '@':
+                a.pairs[i].value.annotation = _read_annotation(stream, pool);
+                break;
+            case '[':
+                fprintf(stderr, "Reading errors from annotation values is TODO!");
+                break;
+        }
+    }
+    return a;
+}
+
+AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by)
+{
+    AttributeInfo *info = malloc(sizeof(AttributeInfo) * length);
+    uint16_t ui;
+    for (size_t i = 0; i < length; i++) {
+        AttributeInfo *item = &info[i];
+        read_16(stream, &ui);
+        item->attribute_name = pool[ui - 1].info.utf8;
+        item->synth_attribute_type = translate_attribute_name(item->attribute_name);
+        read_32_ptr(stream, cursor, &item->attribute_length);
+        switch (item->synth_attribute_type) {
+            case ATTR_CONSTANT_VALUE: {
+                read_16_ptr(stream, cursor, &ui);
+                item->data.constant_value.value = &pool[ui - 1];
+                break;
+            }
+            case ATTR_CODE: {
+                read_16_ptr(stream, cursor, &item->data.code.max_stack);
+                read_16_ptr(stream, cursor, &item->data.code.max_locals);
+                read_32_ptr(stream, cursor, &item->data.code.code_length);
+                item->data.code.code = malloc(sizeof(uint8_t) * item->data.code.code_length);
+                fread(item->data.code.code, sizeof(uint8_t), item->data.code.code_length, stream);
+                read_16_ptr(stream, cursor, &item->data.code.exception_table_length);
+                item->data.code.exception_table = malloc(sizeof(struct _exc_table) * item->data.code.exception_table_length);
+                for (uint16_t j = 0; j < item->data.code.exception_table_length; j++) {
+                    read_16_ptr(stream, cursor, &ui);
+                    item->data.code.exception_table[j].start_pc = item->data.code.code + (ui - 1);
+                    read_16_ptr(stream, cursor, &ui);
+                    item->data.code.exception_table[j].end_pc = item->data.code.code + (ui - 1);
+                    read_16_ptr(stream, cursor, &ui);
+                    item->data.code.exception_table[j].handler_pc = item->data.code.code + (ui - 1);
+                    read_16_ptr(stream, cursor, &ui);
+                    item->data.code.exception_table[j].catch_type = &pool[ui - 1].info._class;
+                }
+                read_16_ptr(stream, cursor, &item->data.code.attributes_count);
+                item->data.code.attributes = read_attributes(stream, pool, item->data.code.attributes_count, &item->data.code);
+                break;
+            }
+            case ATTR_STACK_MAP_TABLE:
+                *cursor += item->attribute_length;
+                break;
+            case ATTR_BOOTSTRAP_METHODS: {
+                read_16_ptr(stream, cursor, &item->data.bootstrap_methods.bootstrap_method_count);
+                item->data.bootstrap_methods.bootstrap_methods = malloc(sizeof(struct bootstrap_method) * item->data.bootstrap_methods.bootstrap_method_count);
+                for (uint16_t j = 0; j < item->data.bootstrap_methods.bootstrap_method_count; j++) {
+                    struct bootstrap_method *method = &item->data.bootstrap_methods.bootstrap_methods[j];
+                    read_16_ptr(stream, cursor, &ui);
+                    method->bootstrap_method = &pool[ui - 1].info.mh;
+                    read_16_ptr(stream, cursor, &method->bootstrap_arg_length);
+                    method->bootstrap_args = malloc(sizeof(ConstantPoolEntry*) * method->bootstrap_arg_length);
+                    for (uint16_t k = 0; k < method->bootstrap_arg_length; k++) {
+                        read_16_ptr(stream, cursor, &ui);
+                        method->bootstrap_args[k] = &pool[ui - 1];
+                    }
+                }
+                break;
+            }
+            case ATTR_NEST_HOST: { 
+                read_16_ptr(stream, cursor, &ui);
+                item->data.nest_host.host_class = &pool[ui - 1].info._class;
+                break;
+            }
+            case ATTR_NEST_MEMBERS: {
+                read_16_ptr(stream, cursor, &item->data.nest_members.classes_length);
+                item->data.nest_members.classes = malloc(sizeof(ClassInfo*) * item->data.nest_members.classes_length);
+                for (uint16_t j = 0; j < item->data.nest_members.classes_length; j++) {
+                    read_16_ptr(stream, cursor, &ui);
+                    item->data.nest_members.classes[j] = &pool[ui - 1].info._class;
+                }
+                break;
+            }
+            case ATTR_PERMITTED_SUBCLASSES: {
+                read_16_ptr(stream, cursor, &item->data.permitted_subclasses.classes_length);
+                item->data.permitted_subclasses.classes = malloc(sizeof(ClassInfo*) * item->data.permitted_subclasses.classes_length);
+                for (uint16_t j = 0; j < item->data.permitted_subclasses.classes_length; j++) {
+                    read_16_ptr(stream, cursor, &ui);
+                    item->data.permitted_subclasses.classes[j] = &pool[ui - 1].info._class;
+                }
+                break;
+            }
+            case ATTR_DEPRECATED:
+                break;
+            case ATTR_SOURCE_FILE:
+                read_16_ptr(stream, cursor, &ui);
+                item->data.sourcefile.sourcefile = &pool[ui - 1].info.utf8;
+                break;
+            case ATTR_LINE_NUMBER_TABLE: {
+                read_16_ptr(stream, cursor, &item->data.line_number_table.line_number_table_length);
+                item->data.line_number_table.line_number_table = malloc(sizeof(struct line_number_table) * item->data.line_number_table.line_number_table_length);
+                for (uint16_t j = 0; j < item->data.line_number_table.line_number_table_length; j++) {
+                    read_16_ptr(stream, cursor, &ui);
+                    item->data.line_number_table.line_number_table[j].start_pc = ((CodeAttribute*) declared_by)->code + (ui - 1);
+                    read_16_ptr(stream, cursor, &item->data.line_number_table.line_number_table[j].line_number);
+                }
+                break;
+            }
+            case ATTR_RUNTIME_INVISIBLE_ANNOTATIONS: {
+                read_16_ptr(stream, cursor, &item->data.invisible_annotations.annotations_length);
+                item->data.invisible_annotations.annotations = malloc(sizeof(Annotation) * item->data.invisible_annotations.annotations_length);
+                for (size_t i = 0; i < item->data.invisible_annotations.annotations_length; i++) {
+                    item->data.invisible_annotations.annotations[i] = _read_annotation(stream, pool);
+                }
+                break;
+            }
+            default:
+                *cursor += item->attribute_length;
+                break;
+        }
+    }
+    return info;
+}
+
+Annotation _read_annotation_ptr(void *stream, int *cursor, ConstantPool pool)
+{
+    Annotation a;
+    uint16_t ui;
+
+    read_16_ptr(stream, cursor, &ui);
+    a.type = &pool[ui - 1].info.utf8;
+    read_16_ptr(stream, cursor, &a.element_value_pair_count);
+    a.pairs = malloc(sizeof(struct _annotation_kv_pair) * a.element_value_pair_count);
+    for (size_t i = 0; i < a.element_value_pair_count; i++) {
+        read_16_ptr(stream, cursor, &ui);
+        a.pairs[i].name = &pool[ui - 1].info.utf8;
+        fread(&a.pairs[i].tag, sizeof(char), 1, stream);
+        char c = a.pairs[i].tag;
+        switch (c) {
+            case 'B':
+            case 'C':
+            case 'D':
+            case 'F':
+            case 'I':
+            case 'J':
+            case 'S':
+            case 'Z':
+            case 's':
+                read_16_ptr(stream, cursor, &ui);
+                a.pairs[i].value.const_val = &pool[ui - 1];
+                break;
+            case 'e':
+                read_16_ptr(stream, cursor, &ui);
+                a.pairs[i].value.enum_const_value.const_type_name = &pool[ui - 1].info.utf8;
+                read_16_ptr(stream, cursor, &ui);
+                a.pairs[i].value.enum_const_value.const_name = &pool[ui - 1].info.utf8;
+                break;
+            case 'c':
+                read_16_ptr(stream, cursor, &ui);
                 a.pairs[i].value.class_info = &pool[ui - 1].info.utf8;
                 break;
             case '@':
