@@ -9,6 +9,7 @@ extern int read_16_ptr(void *stream, int *cursor, uint16_t *var);
 extern int read_32_ptr(void *stream, int *cursor, uint32_t *var);
 extern AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length, void *declared_by);
 extern AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
+AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
 
 Field *read_fields(FILE *stream, ConstantPool pool, uint16_t length)
 {
@@ -71,7 +72,7 @@ Field *read_fields_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t le
         fields[i].field_size = GetFieldValueSize(&fields[i]);
         read_16_ptr(stream, cursor, &fields[i].attribute_count);
         fields[i].value = NULL;
-        fields[i].attributes = read_attributes(stream, pool, fields[i].attribute_count, NULL);
+        fields[i].attributes = read_attributes_ptr(stream, cursor, pool, fields[i].attribute_count, NULL);
     }
     return fields;
 }
@@ -88,7 +89,7 @@ Method *read_methods_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t 
         read_16_ptr(stream, cursor, &descriptor_index);
         method->descriptor = pool[descriptor_index - 1].info.utf8;
         read_16_ptr(stream, cursor, &method->attribute_count);
-        method->attributes = read_attributes(stream, pool, method->attribute_count, NULL);
+        method->attributes = read_attributes_ptr(stream, cursor, pool, method->attribute_count, NULL);
 
         AttributeInfo *attr = GetAttributeBySyntheticIdentifier(method->attributes, method->attribute_count, ATTR_CODE);
 
