@@ -561,12 +561,10 @@ typedef struct {
 ClassFile *ReadFromStream(FILE *stream);
 
 /**
- * Attempts to read a standard JVM class file object from the given pointer.
+ * Attempts to read a standard JVM class file object from the given in-memory pointer.
  *
- * If the reading fails, the function will return NULL, with corresponding errno set.
- * Otherwise, a dynamically allocated pointer will be returned(don't forget to free it).
- * Please note that if function fails, all previously allocated resources will leak, so you're better just letting
- * the program crash!
+ * If reading fails, the program will probably crash due to read from unknown region(segfault).
+ * You must ensure this doesn't happen, or if so, your program will not crash.
  *
  * @param ptr Pointer on where the reading should start.
  */
