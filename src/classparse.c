@@ -33,7 +33,7 @@ int read_32(FILE *stream, uint32_t *var)
 
 int read_16_ptr(void *stream, int *cursor, uint16_t *var)
 {
-    *var = *(uint16_t*) stream;
+    *var = *((uint16_t*) stream + *cursor);
     *var = be16toh(*var);
     *cursor += 2;
     return 1;
@@ -41,7 +41,7 @@ int read_16_ptr(void *stream, int *cursor, uint16_t *var)
 
 int read_32_ptr(void *stream, int *cursor, uint32_t *var)
 {
-    *var = *(uint32_t*) stream;
+    *var = *((uint32_t*) stream + *cursor);
     *var = be32toh(*var);
     *cursor += 4;
     return 1;
