@@ -214,7 +214,7 @@ AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool,
     uint16_t ui;
     for (size_t i = 0; i < length; i++) {
         AttributeInfo *item = &info[i];
-        read_16(stream, &ui);
+        read_16_ptr(stream, cursor, &ui);
         item->attribute_name = pool[ui - 1].info.utf8;
         item->synth_attribute_type = translate_attribute_name(item->attribute_name);
         read_32_ptr(stream, cursor, &item->attribute_length);
