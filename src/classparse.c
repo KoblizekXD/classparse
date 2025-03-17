@@ -143,10 +143,8 @@ static ConstantPool read_cp_ptr(uint16_t count, void *stream, int *cursor)
     checked_malloc(ConstantPool cp, sizeof(ConstantPoolEntry) * count);
     for (uint16_t i = 0; i < count; i++) {
         ConstantPoolEntry *entry = &cp[i];
-        read_8(entry->tag) {
-            errno = ENOMEM;
-            return NULL;
-        }
+        entry->tag = *((uint8_t*) stream + *cursor);
+        (*cursor)++;
         switch (entry->tag) {
             case CONSTANT_Class:
                 read_16_ptr(stream, cursor, &ui);
