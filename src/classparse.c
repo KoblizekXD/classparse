@@ -185,7 +185,7 @@ static ConstantPool read_cp_ptr(uint16_t count, void *stream, int *cursor)
                 read_16_ptr(stream, cursor, &ui);
                 entry->info.utf8 = malloc(ui + 1);
                 memcpy(entry->info.utf8, (uint8_t*) stream + *cursor, ui);
-                cursor += ui;
+                *cursor += ui;
                 entry->info.utf8[ui] = '\0';
                 break;
             case CONSTANT_MethodHandle:
