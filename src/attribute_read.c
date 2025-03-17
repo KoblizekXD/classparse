@@ -229,7 +229,7 @@ AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool,
                 read_16_ptr(stream, cursor, &item->data.code.max_locals);
                 read_32_ptr(stream, cursor, &item->data.code.code_length);
                 item->data.code.code = malloc(sizeof(uint8_t) * item->data.code.code_length);
-                fread(item->data.code.code, sizeof(uint8_t), item->data.code.code_length, stream);
+                memcpy(item->data.code.code, (uint8_t*) stream + *cursor, item->data.code.code_length);
                 read_16_ptr(stream, cursor, &item->data.code.exception_table_length);
                 item->data.code.exception_table = malloc(sizeof(struct _exc_table) * item->data.code.exception_table_length);
                 for (uint16_t j = 0; j < item->data.code.exception_table_length; j++) {
@@ -243,7 +243,7 @@ AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool,
                     item->data.code.exception_table[j].catch_type = &pool[ui - 1].info._class;
                 }
                 read_16_ptr(stream, cursor, &item->data.code.attributes_count);
-                item->data.code.attributes = read_attributes(stream, pool, item->data.code.attributes_count, &item->data.code);
+                item->data.code.attributes = read_attributes_ptr(stream, cursor, pool, item->data.code.attributes_count, &item->data.code);
                 break;
             }
             case ATTR_STACK_MAP_TABLE:
@@ -332,7 +332,7 @@ Annotation _read_annotation_ptr(void *stream, int *cursor, ConstantPool pool)
     for (size_t i = 0; i < a.element_value_pair_count; i++) {
         read_16_ptr(stream, cursor, &ui);
         a.pairs[i].name = &pool[ui - 1].info.utf8;
-        fread(&a.pairs[i].tag, sizeof(char), 1, stream);
+        a.pairs[i].tag = *((uint8_t*) stream + *cursor);
         char c = a.pairs[i].tag;
         switch (c) {
             case 'B':
