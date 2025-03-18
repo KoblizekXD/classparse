@@ -189,7 +189,8 @@ static ConstantPool read_cp_ptr(uint16_t count, void *stream, int *cursor)
                 entry->info.utf8[ui] = '\0';
                 break;
             case CONSTANT_MethodHandle:
-                read_8(entry->info.mh.reference_kind) return NULL;
+                entry->info.mh.reference_kind = *((uint8_t*) stream + *cursor);
+                (*cursor)++;
                 read_16_ptr(stream, cursor, &ui);
                 entry->info.mh.member_ref = &cp[ui - 1].info.member_ref;
                 break;
