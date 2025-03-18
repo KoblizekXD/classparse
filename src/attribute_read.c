@@ -309,7 +309,7 @@ AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool,
                 read_16_ptr(stream, cursor, &item->data.invisible_annotations.annotations_length);
                 item->data.invisible_annotations.annotations = malloc(sizeof(Annotation) * item->data.invisible_annotations.annotations_length);
                 for (size_t i = 0; i < item->data.invisible_annotations.annotations_length; i++) {
-                    item->data.invisible_annotations.annotations[i] = _read_annotation(stream, pool);
+                    item->data.invisible_annotations.annotations[i] = _read_annotation_ptr(stream, cursor, pool);
                 }
                 break;
             }
