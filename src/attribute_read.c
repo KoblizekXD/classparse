@@ -334,6 +334,7 @@ Annotation _read_annotation_ptr(void *stream, int *cursor, ConstantPool pool)
         read_16_ptr(stream, cursor, &ui);
         a.pairs[i].name = &pool[ui - 1].info.utf8;
         a.pairs[i].tag = *((uint8_t*) stream + *cursor);
+        (*cursor)++;
         char c = a.pairs[i].tag;
         switch (c) {
             case 'B':
@@ -359,10 +360,10 @@ Annotation _read_annotation_ptr(void *stream, int *cursor, ConstantPool pool)
                 a.pairs[i].value.class_info = &pool[ui - 1].info.utf8;
                 break;
             case '@':
-                a.pairs[i].value.annotation = _read_annotation(stream, pool);
+                a.pairs[i].value.annotation = _read_annotation_ptr(stream, cursor, pool);
                 break;
             case '[':
-                fprintf(stderr, "Reading errors from annotation values is TODO!");
+                fprintf(stderr, "Reading arrays from annotation values is TODO!");
                 break;
         }
     }
