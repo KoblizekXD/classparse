@@ -230,6 +230,7 @@ AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool,
                 read_32_ptr(stream, cursor, &item->data.code.code_length);
                 item->data.code.code = malloc(sizeof(uint8_t) * item->data.code.code_length);
                 memcpy(item->data.code.code, (uint8_t*) stream + *cursor, item->data.code.code_length);
+                *cursor += item->data.code.code_length;
                 read_16_ptr(stream, cursor, &item->data.code.exception_table_length);
                 item->data.code.exception_table = malloc(sizeof(struct _exc_table) * item->data.code.exception_table_length);
                 for (uint16_t j = 0; j < item->data.code.exception_table_length; j++) {
