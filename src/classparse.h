@@ -10,6 +10,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#else
+#define EMSCRIPTEN_KEEPALIVE
+#endif
+
 // ===================================================== CONSTANTS
 
 // Types of constant pool entries(tags):
@@ -558,7 +564,7 @@ typedef struct {
  *
  * @param stream The passing stream, must not be NULL.
  */
-ClassFile *ReadFromStream(FILE *stream);
+EMSCRIPTEN_KEEPALIVE ClassFile *ReadFromStream(FILE *stream);
 
 /**
  * Attempts to read a standard JVM class file object from the given in-memory pointer.
@@ -568,7 +574,7 @@ ClassFile *ReadFromStream(FILE *stream);
  *
  * @param ptr Pointer on where the reading should start.
  */
-ClassFile *ReadFrom(void *ptr);
+EMSCRIPTEN_KEEPALIVE ClassFile *ReadFrom(void *ptr);
 
 #define OUTPUT_LE 0
 #define OUTPUT_BE 1
@@ -580,7 +586,7 @@ ClassFile *ReadFrom(void *ptr);
  * @param stream The stream to write to.
  * @target Either OUTPUT_LE or OUTPUT_BE, resulting endianness of the classfile.
  */
-int WriteToStream(ClassFile *cf, FILE *stream, int target);
+EMSCRIPTEN_KEEPALIVE int WriteToStream(ClassFile *cf, FILE *stream, int target);
 
 /**
  * Frees given class file.
@@ -588,41 +594,41 @@ int WriteToStream(ClassFile *cf, FILE *stream, int target);
  *
  * @param cf Classfile to free.
  */
-void FreeClassFile(ClassFile *cf);
+EMSCRIPTEN_KEEPALIVE void FreeClassFile(ClassFile *cf);
 
 /**
  * Locates a method with the given name from the given classfile.
  * If no such method is found, NULL is returned.
  */
-Method *GetMethodByName(ClassFile *cf, const char *name);
+EMSCRIPTEN_KEEPALIVE Method *GetMethodByName(ClassFile *cf, const char *name);
 
 /**
  * Locates a field with the given name from the given classfile.
  * If no such field is found, NULL is returned.
  */
-Field *GetFieldByName(ClassFile *cf, const char *name);
+EMSCRIPTEN_KEEPALIVE Field *GetFieldByName(ClassFile *cf, const char *name);
 
 /**
  * Locates the first found attribute with specified name from the provided array.
  * If no such attribute is found, NULL is returned.
  */
-AttributeInfo *GetAttributeByName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
+EMSCRIPTEN_KEEPALIVE AttributeInfo *GetAttributeByName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
 
 /**
  * Locates the first found attribute with specified synthetic identifier from the provided array.
  * If no such attribute is found, NULL is returned.
  */
-AttributeInfo *GetAttributeBySyntheticIdentifier(AttributeInfo *attributes, uint16_t attribute_count, int id);
+EMSCRIPTEN_KEEPALIVE AttributeInfo *GetAttributeBySyntheticIdentifier(AttributeInfo *attributes, uint16_t attribute_count, int id);
 
 /**
  * Returns 1 if the attribute with given synthetic identifier is present in the array. 0 Otherwise.
  */
-int HasAttributeWithId(AttributeInfo *attributes, uint16_t attribute_count, int id);
+EMSCRIPTEN_KEEPALIVE int HasAttributeWithId(AttributeInfo *attributes, uint16_t attribute_count, int id);
 
 /**
  * Returns 1 if the attribute with given name is present in the array. 0 Otherwise.
  */
-int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
+EMSCRIPTEN_KEEPALIVE int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
 
 /**
  * Returns the size of the field's value in bytes.
@@ -637,19 +643,19 @@ int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, co
  * Z	boolean	    1
  * L    reference   4-8
  */
-size_t GetFieldValueSize(Field *field);
+EMSCRIPTEN_KEEPALIVE size_t GetFieldValueSize(Field *field);
 
 /**
  * Returns the parameter count of a method. This is parsed from the
  * method's descriptor.
  */
-size_t GetParameterCount(Method *method);
+EMSCRIPTEN_KEEPALIVE size_t GetParameterCount(Method *method);
 
 /**
  * Returns the size of a parameter in given method on given offset(0+).
  * The function may return -1 under some circumstances(invalid offset etc.).
  */
-size_t GetParameterSize(Method *method, uint16_t offset);
+EMSCRIPTEN_KEEPALIVE size_t GetParameterSize(Method *method, uint16_t offset);
 
 /**
  * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
@@ -658,12 +664,12 @@ size_t GetParameterSize(Method *method, uint16_t offset);
  * The way this works, is that the class is being read until it's `name` field, when it's reached,
  * it is resolved and returned. Stream will not be closed automatically.
  */
-char *PeekClassName(FILE *stream);
+EMSCRIPTEN_KEEPALIVE char *PeekClassName(FILE *stream);
 
 /**
  * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
  * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
  */
-char *InMemoryPeekClassName(void *stream);
+EMSCRIPTEN_KEEPALIVE char *InMemoryPeekClassName(void *stream);
 
 #endif // CLASSPARSE_H

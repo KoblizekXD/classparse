@@ -1,12 +1,21 @@
-CC := gcc
-LD := gcc
+TARGET ?= gcc
 
 BUILD   := build
-OUTPUT  := $(BUILD)/libclassparse.so
 SRC     := src
 
+ifeq ($(TARGET), wasm)
+    CC := emcc
+    LD := emcc
+    OUTPUT := $(BUILD)/libclassparse.wasm
+    LDFLAGS := -sSIDE_MODULE=1 -sERROR_ON_UNDEFINED_SYMBOLS=0
+else
+    CC := gcc
+    LD := gcc
+    OUTPUT := $(BUILD)/libclassparse.so
+    LDFLAGS := -shared -fPIC
+endif
+
 CFLAGS  := -Wall -Wextra -Wpedantic -Wconversion -fPIC -std=gnu11 -I $(SRC)
-LDFLAGS := -shared -fPIC
 
 CFILES := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
 OBJ    := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o)) 
