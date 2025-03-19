@@ -308,3 +308,90 @@ ClassFile *ReadFrom(void *stream)
     cf->attributes = read_attributes_ptr(stream, &cursor, cf->constant_pool, cf->attribute_count, NULL);
     return cf;
 }
+
+char *PeekClassName(FILE *stream)
+{
+    if (stream == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+    uint32_t ui32;
+    uint16_t ui;
+
+    read_32(stream, &ui32);
+    if (ui32 != 0xCAFEBABE) {
+        errno = EIO;
+        return NULL;
+    }
+    read_16(stream, &ui);
+    read_16(stream, &ui);
+    read_16(stream, &ui);
+    uint16_t cpool_size = ui - 1;
+    ConstantPool pool = read_cp(cpool_size, stream);
+    read_16(stream, &ui);
+    read_16(stream, &ui);
+    char *name = *pool[ui - 1].info._class.name;
+    char *to_ret = malloc(strlen(name) + 1);
+
+    if (!to_ret) {
+        free(pool);
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    strcpy(to_ret, name);
+
+    for (uint16_t i = 0; i < cpool_size; i++) {
+        ConstantPoolEntry *entry = &pool[i];
+        if (entry->tag == CONSTANT_Utf8)
+            free(entry->info.utf8);
+    }
+    free(pool);
+
+    return to_ret;
+}
+
+char *InMemoryPeekClassName(void *stream)
+{
+    int cursor = 0;
+    if (stream == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+    uint32_t ui32;
+    uint16_t ui;
+
+    read_32_ptr(stream, &cursor, &ui32);
+    if (ui32 != 0xCAFEBABE) {
+        errno = EIO;
+        return NULL;
+    }
+    read_16_ptr(stream, &cursor, &ui);
+    read_16_ptr(stream, &cursor, &ui);
+    read_16_ptr(stream, &cursor, &ui);
+    uint16_t cpool_size = ui - 1;
+    ConstantPool pool = read_cp(cpool_size, stream);
+    read_16_ptr(stream, &cursor, &ui);
+    read_16_ptr(stream, &cursor, &ui);
+    char *name = *pool[ui - 1].info._class.name;
+    char *to_ret = malloc(strlen(name) + 1);
+
+    if (!to_ret) {
+        free(pool);
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    strcpy(to_ret, name);
+
+    for (uint16_t i = 0; i < cpool_size; i++) {
+        ConstantPoolEntry *entry = &pool[i];
+        if (entry->tag == CONSTANT_Utf8)
+            free(entry->info.utf8);
+    }
+    free(pool);
+
+    return to_ret;
+}

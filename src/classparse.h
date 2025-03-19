@@ -651,4 +651,19 @@ size_t GetParameterCount(Method *method);
  */
 size_t GetParameterSize(Method *method, uint16_t offset);
 
+/**
+ * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
+ * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
+ *
+ * The way this works, is that the class is being read until it's `name` field, when it's reached,
+ * it is resolved and returned. Stream will not be closed automatically.
+ */
+char *PeekClassName(FILE *stream);
+
+/**
+ * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
+ * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
+ */
+char *InMemoryPeekClassName(void *stream);
+
 #endif // CLASSPARSE_H
