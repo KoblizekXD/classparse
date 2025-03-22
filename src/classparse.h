@@ -101,6 +101,7 @@
 #define ALOAD_1         0x2B
 #define ALOAD_2         0x2C
 #define ALOAD_3         0x2D
+#define ANEWARRAY       0xBD
 #define ARETURN         0xB0
 #define ARRAYLENGTH     0xBE
 #define ASTORE          0x3A
