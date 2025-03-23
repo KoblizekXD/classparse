@@ -79,9 +79,10 @@ const char *PRIMITIVE_DESC_TYPES = "BCDFIJSZ";
 
 size_t GetParameterCount(Method *method)
 {
-    char *descriptor = method->descriptor;
+    char *descriptor = strchr(method->descriptor, '(') + 1;
     size_t count = 0;
-    size_t length = strlen(descriptor);
+    size_t length = strrchr(method->descriptor, ')') - descriptor;
+    if (length == 0) return 0;
 
     for (size_t i = 0; i < length; i++) {
         char c = descriptor[i];
