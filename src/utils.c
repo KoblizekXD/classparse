@@ -10,10 +10,10 @@ Method *GetMethodByName(ClassFile *cf, const char *name)
     return NULL;
 }
 
-EMSCRIPTEN_KEEPALIVE Method *GetMethodByNameAndDescriptor(ClassFile *cf, const char *name, const char *descriptor)
+Method *GetMethodByNameAndDescriptor(ClassFile *cf, const char *name, const char *descriptor)
 {
     for (uint16_t i = 0; i < cf->method_count; i++) {
-        if (strcmp(cf->methods[i].name, name) == 0 && strcmp(cf->methods[i].descriptor, descriptor)) return &cf->methods[i];
+        if (strcmp(cf->methods[i].name, name) == 0 && strcmp(cf->methods[i].descriptor, descriptor) == 0) return &cf->methods[i];
     }
     return NULL;
 }
