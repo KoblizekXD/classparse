@@ -604,6 +604,12 @@ EMSCRIPTEN_KEEPALIVE void FreeClassFile(ClassFile *cf);
 EMSCRIPTEN_KEEPALIVE Method *GetMethodByName(ClassFile *cf, const char *name);
 
 /**
+ * Locates a method with the given name and descriptor from given classfile.
+ * If no such method is found, NULL is returned.
+ */
+EMSCRIPTEN_KEEPALIVE Method *GetMethodByNameAndDescriptor(ClassFile *cf, const char *name, const char *descriptor);
+
+/**
  * Locates a field with the given name from the given classfile.
  * If no such field is found, NULL is returned.
  */
