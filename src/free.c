@@ -1,6 +1,7 @@
 #include <classparse.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 void free_attribute_array(AttributeInfo *attributes, uint16_t length)
 {
@@ -44,7 +45,7 @@ void FreeClassFile(ClassFile *cf)
     if (cf == NULL) return;
     for (uint16_t i = 0; i < cf->contant_pool_size; i++) {
         ConstantPoolEntry *entry = &cf->constant_pool[i];
-        if (entry->tag == CONSTANT_Utf8)
+        if (entry->tag == CONSTANT_Utf8 && strlen(entry->info.utf8) == 0)
             free(entry->info.utf8);
     }
     free(cf->constant_pool);
