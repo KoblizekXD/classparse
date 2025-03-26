@@ -47,7 +47,7 @@ void FreeClassFile(ClassFile *cf)
         ConstantPoolEntry *entry = &cf->constant_pool[i];
         if (entry->tag == CONSTANT_Long || entry->tag == CONSTANT_Double)
             i++;
-        if (entry->tag == CONSTANT_Utf8 && entry->info.utf8[0] != '\0')
+        if (entry->tag == CONSTANT_Utf8)
             free(entry->info.utf8);
     }
     free(cf->constant_pool);
