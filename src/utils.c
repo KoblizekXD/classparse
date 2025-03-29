@@ -58,6 +58,14 @@ int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, co
     return 0;
 }
 
+char GetReturnType(Method *method)
+{
+    if (!method || !method->descriptor) return 0;
+    char *descriptor = strchr(method->descriptor, ')') + 1;
+
+    return descriptor[0];
+}
+
 size_t GetFieldValueSize(Field *field)
 {
     if (!field || !field->descriptor) {

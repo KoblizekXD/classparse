@@ -661,8 +661,16 @@ EMSCRIPTEN_KEEPALIVE size_t GetParameterCount(Method *method);
 /**
  * Returns the size of a parameter in given method on given offset(0+).
  * The function may return -1 under some circumstances(invalid offset etc.).
+ * See the GetFieldValueSize documentation about the sizes of each parameter.
  */
 EMSCRIPTEN_KEEPALIVE size_t GetParameterSize(Method *method, uint16_t offset);
+
+/**
+ * Returns the return type of given method.
+ * The character will correspond to the descriptor type(similiar to field's)
+ * in addition to `void` return type, which will have the `V` character.
+ */
+EMSCRIPTEN_KEEPALIVE char GetReturnType(Method *method);
 
 /**
  * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
