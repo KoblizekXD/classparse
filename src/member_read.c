@@ -45,15 +45,9 @@ Method *read_methods(FILE *stream, ConstantPool pool, uint16_t length)
 
         AttributeInfo *attr = GetAttributeBySyntheticIdentifier(method->attributes, method->attribute_count, ATTR_CODE);
 
-        if (attr) {
-            method->code = attr->data.code.code;
-            method->code_length = attr->data.code.code_length;
-            method->max_stack = attr->data.code.max_stack;
-            method->max_locals = attr->data.code.max_locals;
-        } else {
-            method->code = NULL;
-            method->code_length = method->max_stack = method->max_locals = NOCODE;
-        }
+        if (attr)
+            method->code = &attr->data.code;
+        else method->code = NULL;
 
     }
     return methods;
@@ -93,15 +87,9 @@ Method *read_methods_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t 
 
         AttributeInfo *attr = GetAttributeBySyntheticIdentifier(method->attributes, method->attribute_count, ATTR_CODE);
 
-        if (attr) {
-            method->code = attr->data.code.code;
-            method->code_length = attr->data.code.code_length;
-            method->max_stack = attr->data.code.max_stack;
-            method->max_locals = attr->data.code.max_locals;
-        } else {
-            method->code = NULL;
-            method->code_length = method->max_stack = method->max_locals = NOCODE;
-        }
+        if (attr)
+            method->code = &attr->data.code;
+        else method->code = NULL;
 
     }
     return methods;

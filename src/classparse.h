@@ -508,12 +508,16 @@ struct _attribute_info {
 
 // ===================================================== MEMBERS
 
+struct _class_file;
+typedef struct _class_file ClassFile;
+
 typedef struct {
     uint16_t access_flags;
     char *descriptor;
     char *name;
     void *value;
     uint8_t field_size;
+    ClassFile *cf;
     uint16_t attribute_count;
     AttributeInfo *attributes;
 } Field;
@@ -522,17 +526,15 @@ typedef struct {
     uint16_t access_flags;
     char *descriptor;
     char *name;
-    uint16_t max_stack;
-    uint16_t max_locals;
-    uint32_t code_length;
-    uint8_t *code;
+    CodeAttribute *code;
+    ClassFile *cf;
     uint16_t attribute_count;
     AttributeInfo *attributes;
 } Method;
 
 #define NOCODE -1
 
-typedef struct {
+struct _class_file {
     uint32_t magic;
     uint16_t minor_version;
     uint16_t major_version;
@@ -549,7 +551,7 @@ typedef struct {
     Method *methods;
     uint16_t attribute_count;
     AttributeInfo *attributes;
-} ClassFile;
+};
 
 // ===================================================== FUNCTIONS
 

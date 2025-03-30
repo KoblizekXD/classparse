@@ -256,8 +256,14 @@ ClassFile *ReadFromStream(FILE *stream)
     }
     read_16(stream, &cf->field_count);
     cf->fields = read_fields(stream, cf->constant_pool, cf->field_count);
+    for (size_t i = 0; i < cf->field_count; i++) {
+        cf->fields[i].cf = cf;
+    }
     read_16(stream, &cf->method_count);
     cf->methods = read_methods(stream, cf->constant_pool, cf->method_count);
+    for (size_t i = 0; i < cf->method_count; i++) {
+        cf->methods[i].cf = cf;
+    }
     read_16(stream, &cf->attribute_count);
     cf->attributes = read_attributes(stream, cf->constant_pool, cf->attribute_count, NULL);
     return cf;
@@ -302,8 +308,14 @@ ClassFile *ReadFrom(void *stream)
     }
     read_16_ptr(stream, &cursor, &cf->field_count);
     cf->fields = read_fields_ptr(stream, &cursor, cf->constant_pool, cf->field_count);
+    for (size_t i = 0; i < cf->field_count; i++) {
+        cf->fields[i].cf = cf;
+    }
     read_16_ptr(stream, &cursor, &cf->method_count);
     cf->methods = read_methods_ptr(stream, &cursor, cf->constant_pool, cf->method_count);
+    for (size_t i = 0; i < cf->method_count; i++) {
+        cf->methods[i].cf = cf;
+    }
     read_16_ptr(stream, &cursor, &cf->attribute_count);
     cf->attributes = read_attributes_ptr(stream, &cursor, cf->constant_pool, cf->attribute_count, NULL);
     return cf;
