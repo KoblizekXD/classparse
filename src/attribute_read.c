@@ -80,7 +80,10 @@ AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length,
                     read_16(stream, &ui);
                     item->data.code.exception_table[j].handler_pc = item->data.code.code + (ui - 1);
                     read_16(stream, &ui);
-                    item->data.code.exception_table[j].catch_type = &pool[ui - 1].info._class;
+                    if (ui != 0)
+                        item->data.code.exception_table[j].catch_type = &pool[ui - 1].info._class;
+                    else 
+                        item->data.code.exception_table[j].catch_type = NULL; 
                 }
                 read_16(stream, &item->data.code.attributes_count);
                 item->data.code.attributes = read_attributes(stream, pool, item->data.code.attributes_count, &item->data.code);
@@ -241,7 +244,10 @@ AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool,
                     read_16_ptr(stream, cursor, &ui);
                     item->data.code.exception_table[j].handler_pc = item->data.code.code + (ui - 1);
                     read_16_ptr(stream, cursor, &ui);
-                    item->data.code.exception_table[j].catch_type = &pool[ui - 1].info._class;
+                    if (ui != 0)
+                        item->data.code.exception_table[j].catch_type = &pool[ui - 1].info._class;
+                    else 
+                        item->data.code.exception_table[j].catch_type = NULL;
                 }
                 read_16_ptr(stream, cursor, &item->data.code.attributes_count);
                 item->data.code.attributes = read_attributes_ptr(stream, cursor, pool, item->data.code.attributes_count, &item->data.code);
