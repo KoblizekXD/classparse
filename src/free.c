@@ -53,7 +53,7 @@ void FreeClassFile(ClassFile *cf)
     free(cf->constant_pool);
     free(cf->interfaces);
     for (uint16_t i = 0; i < cf->field_count; i++) {
-        free(cf->fields[i].value);
+        // free(cf->fields[i].value); // Don't free as is managed by setter.
         free_attribute_array(cf->fields[i].attributes, cf->fields[i].attribute_count);
     }
     free(cf->fields);
