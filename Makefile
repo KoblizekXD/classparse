@@ -6,8 +6,8 @@ SRC     := src
 ifeq ($(TARGET), wasm)
     CC := emcc
     LD := emcc
-    OUTPUT := $(BUILD)/libclassparse.wasm
-    LDFLAGS := -sSIDE_MODULE=1 -sERROR_ON_UNDEFINED_SYMBOLS=0
+    OUTPUT := $(BUILD)/libclassparse.js
+    LDFLAGS := -sERROR_ON_UNDEFINED_SYMBOLS=0
 else
     CC := gcc
     LD := gcc

@@ -12,8 +12,11 @@
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#define CLASSPARSE_EXPORT EMSCRIPTEN_KEEPALIVE
+#elif defined(_WIN32)
+#define CLASSPARSE_EXPORT __declspec(dllexport)
 #else
-#define EMSCRIPTEN_KEEPALIVE
+#define CLASSPARSE_EXPORT __attribute__((visibility("default")))
 #endif
 
 // ===================================================== CONSTANTS
@@ -567,7 +570,7 @@ struct _class_file {
  *
  * @param stream The passing stream, must not be NULL.
  */
-EMSCRIPTEN_KEEPALIVE ClassFile *ReadFromStream(FILE *stream);
+CLASSPARSE_EXPORT ClassFile *ReadFromStream(FILE *stream);
 
 /**
  * Attempts to read a standard JVM class file object from the given in-memory pointer.
@@ -577,7 +580,7 @@ EMSCRIPTEN_KEEPALIVE ClassFile *ReadFromStream(FILE *stream);
  *
  * @param ptr Pointer on where the reading should start.
  */
-EMSCRIPTEN_KEEPALIVE ClassFile *ReadFrom(void *ptr);
+CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
 
 #define OUTPUT_LE 0
 #define OUTPUT_BE 1
@@ -589,7 +592,7 @@ EMSCRIPTEN_KEEPALIVE ClassFile *ReadFrom(void *ptr);
  * @param stream The stream to write to.
  * @target Either OUTPUT_LE or OUTPUT_BE, resulting endianness of the classfile.
  */
-EMSCRIPTEN_KEEPALIVE int WriteToStream(ClassFile *cf, FILE *stream, int target);
+CLASSPARSE_EXPORT int WriteToStream(ClassFile *cf, FILE *stream, int target);
 
 /**
  * Frees given class file.
@@ -597,47 +600,47 @@ EMSCRIPTEN_KEEPALIVE int WriteToStream(ClassFile *cf, FILE *stream, int target);
  *
  * @param cf Classfile to free.
  */
-EMSCRIPTEN_KEEPALIVE void FreeClassFile(ClassFile *cf);
+CLASSPARSE_EXPORT void FreeClassFile(ClassFile *cf);
 
 /**
  * Locates a method with the given name from the given classfile.
  * If no such method is found, NULL is returned.
  */
-EMSCRIPTEN_KEEPALIVE Method *GetMethodByName(ClassFile *cf, const char *name);
+CLASSPARSE_EXPORT Method *GetMethodByName(ClassFile *cf, const char *name);
 
 /**
  * Locates a method with the given name and descriptor from given classfile.
  * If no such method is found, NULL is returned.
  */
-EMSCRIPTEN_KEEPALIVE Method *GetMethodByNameAndDescriptor(ClassFile *cf, const char *name, const char *descriptor);
+CLASSPARSE_EXPORT Method *GetMethodByNameAndDescriptor(ClassFile *cf, const char *name, const char *descriptor);
 
 /**
  * Locates a field with the given name from the given classfile.
  * If no such field is found, NULL is returned.
  */
-EMSCRIPTEN_KEEPALIVE Field *GetFieldByName(ClassFile *cf, const char *name);
+CLASSPARSE_EXPORT Field *GetFieldByName(ClassFile *cf, const char *name);
 
 /**
  * Locates the first found attribute with specified name from the provided array.
  * If no such attribute is found, NULL is returned.
  */
-EMSCRIPTEN_KEEPALIVE AttributeInfo *GetAttributeByName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
+CLASSPARSE_EXPORT AttributeInfo *GetAttributeByName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
 
 /**
  * Locates the first found attribute with specified synthetic identifier from the provided array.
  * If no such attribute is found, NULL is returned.
  */
-EMSCRIPTEN_KEEPALIVE AttributeInfo *GetAttributeBySyntheticIdentifier(AttributeInfo *attributes, uint16_t attribute_count, int id);
+CLASSPARSE_EXPORT AttributeInfo *GetAttributeBySyntheticIdentifier(AttributeInfo *attributes, uint16_t attribute_count, int id);
 
 /**
  * Returns 1 if the attribute with given synthetic identifier is present in the array. 0 Otherwise.
  */
-EMSCRIPTEN_KEEPALIVE int HasAttributeWithId(AttributeInfo *attributes, uint16_t attribute_count, int id);
+CLASSPARSE_EXPORT int HasAttributeWithId(AttributeInfo *attributes, uint16_t attribute_count, int id);
 
 /**
  * Returns 1 if the attribute with given name is present in the array. 0 Otherwise.
  */
-EMSCRIPTEN_KEEPALIVE int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
+CLASSPARSE_EXPORT int HasAttributeWithName(AttributeInfo *attributes, uint16_t attribute_count, const char *name);
 
 /**
  * Returns the size of the field's value in bytes.
@@ -652,27 +655,27 @@ EMSCRIPTEN_KEEPALIVE int HasAttributeWithName(AttributeInfo *attributes, uint16_
  * Z	boolean	    1
  * L    reference   4-8
  */
-EMSCRIPTEN_KEEPALIVE size_t GetFieldValueSize(Field *field);
+CLASSPARSE_EXPORT size_t GetFieldValueSize(Field *field);
 
 /**
  * Returns the parameter count of a method. This is parsed from the
  * method's descriptor.
  */
-EMSCRIPTEN_KEEPALIVE size_t GetParameterCount(Method *method);
+CLASSPARSE_EXPORT size_t GetParameterCount(Method *method);
 
 /**
  * Returns the size of a parameter in given method on given offset(0+).
  * The function may return -1 under some circumstances(invalid offset etc.).
  * See the GetFieldValueSize documentation about the sizes of each parameter.
  */
-EMSCRIPTEN_KEEPALIVE size_t GetParameterSize(Method *method, uint16_t offset);
+CLASSPARSE_EXPORT size_t GetParameterSize(Method *method, uint16_t offset);
 
 /**
  * Returns the return type of given method.
  * The character will correspond to the descriptor type(similiar to field's)
  * in addition to `void` return type, which will have the `V` character.
  */
-EMSCRIPTEN_KEEPALIVE char GetReturnType(Method *method);
+CLASSPARSE_EXPORT char GetReturnType(Method *method);
 
 /**
  * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
@@ -681,12 +684,12 @@ EMSCRIPTEN_KEEPALIVE char GetReturnType(Method *method);
  * The way this works, is that the class is being read until it's `name` field, when it's reached,
  * it is resolved and returned. Stream will not be closed automatically.
  */
-EMSCRIPTEN_KEEPALIVE char *PeekClassName(FILE *stream);
+CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
 
 /**
  * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
  * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
  */
-EMSCRIPTEN_KEEPALIVE char *InMemoryPeekClassName(void *stream);
+CLASSPARSE_EXPORT char *InMemoryPeekClassName(void *stream);
 
 #endif // CLASSPARSE_H
