@@ -7,7 +7,7 @@ ifeq ($(TARGET), wasm)
     CC := emcc
     LD := emcc
     OUTPUT := $(BUILD)/libclassparse.js
-    LDFLAGS := -sERROR_ON_UNDEFINED_SYMBOLS=0
+    LDFLAGS := -sERROR_ON_UNDEFINED_SYMBOLS=0 -sMODULARIZE=1 -sEXPORT_ES6=1 --emit-tsd libclassparse.d.ts
 else
     CC := gcc
     LD := gcc

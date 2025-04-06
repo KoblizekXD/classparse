@@ -119,7 +119,7 @@ size_t GetParameterCount(Method *method)
                 while (descriptor[i] != ';') {
                     i++;
                 }
-            }
+            } else i++;
             count++;
             i--;
         }
