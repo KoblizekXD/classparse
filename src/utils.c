@@ -184,7 +184,7 @@ size_t GetParameterSize(Method *method, uint16_t offset)
     return -1;
 }
 
-char *GetInstructionByName(uint8_t opcode)
+char *GetInstructionName(uint8_t opcode)
 {
     switch (opcode) {
         case NOP: return "NOP";
