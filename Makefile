@@ -71,7 +71,7 @@ else
 endif
 
 # Final Output
-LIBRARY := $(BIN_DIR)/$(NAME)$(EXT)
+LIBRARY := $(BIN_DIR)/lib$(NAME)$(EXT)
 
 # Phony Targets
 .PHONY: all dev prod install uninstall clean
