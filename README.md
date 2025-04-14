@@ -47,25 +47,17 @@ make prod TARGET=win32  # Optimized Windows build
 | `sudo make install` | Install Linux library and headers (requires `TARGET=linux`) |
 | `sudo make uninstall` | Remove installed files |
 
-## Build Configuration
+### Build Configuration
 
-### Development Mode (`make dev`)
+#### Development Mode (`make dev`)
 - Compiler: `-std=gnu11`
 - Flags: `-g -Wall -Wextra -fsanitize=address -fno-omit-frame-pointer -pg`
 - No optimizations
 
-### Production Mode (`make prod`)
+#### Production Mode (`make prod`)
 - Compiler: `-std=gnu11` 
 - Flags: `-O3 -flto -Wall -Wextra`
 - Full optimizations enabled
-
-## Directory Structure
-```
-project/
-├── bin/       # Final binaries
-├── build/     # Intermediate objects
-└── src/       # Source files
-```
 
 ## Examples
 Examples can be found inside the `examples/` directory, you can compile all of them using the `make` command.
