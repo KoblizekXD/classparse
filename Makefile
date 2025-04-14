@@ -1,60 +1,120 @@
-TARGET ?= gcc
+# YES THIS MAKEFILE WAS GENERATE BY AI IF YOU HAVENT GUESSED YET
 
-BUILD   := build
-SRC     := src
+# Project Configuration
+NAME := classparse
+SRC_DIR := src
+BUILD_DIR := build
+BIN_DIR := bin
+HEADER := $(SRC_DIR)/$(NAME).h
 
-ifeq ($(TARGET), wasm)
-    CC := emcc
-    LD := emcc
-    OUTPUT := $(BUILD)/libclassparse.js
-    LDFLAGS := -sERROR_ON_UNDEFINED_SYMBOLS=0 -sMODULARIZE=1 -sEXPORT_ES6=1 --emit-tsd libclassparse.d.ts
+# Toolchain Configuration
+CC.linux := gcc
+CC.win32 := x86_64-w64-mingw32-gcc
+CC.wasm := emcc
+
+CFLAGS.linux := -fPIC
+CFLAGS.win32 := 
+CFLAGS.wasm := -s SIDE_MODULE=1 -s WASM=1
+
+LDFLAGS.linux := -shared -fPIC
+LDFLAGS.win32 := -shared
+LDFLAGS.wasm := -s SIDE_MODULE=1 -s WASM=1 -s EXPORT_ALL=1
+
+EXT.linux := .so
+EXT.win32 := .dll
+EXT.wasm := .wasm
+
+# Build Configuration
+CFLAGS_DEV := -std=gnu11 -O0 -g -Wall -Wextra -fsanitize=address -fno-omit-frame-pointer -pg
+LDFLAGS_DEV := -g -fsanitize=address -pg
+
+CFLAGS_PROD := -std=gnu11 -O3 -flto -Wall -Wextra
+LDFLAGS_PROD := -O3 -flto
+
+# File Lists
+SRCS := $(wildcard $(SRC_DIR)/*.c)
+OBJS := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(SRCS))
+
+# Default to host platform if not specified
+ifeq ($(OS),Windows_NT)
+    HOST_PLATFORM := win32
 else
-    CC := gcc
-    LD := gcc
-    OUTPUT := $(BUILD)/libclassparse.so
-    LDFLAGS := -shared -fPIC
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        HOST_PLATFORM := linux
+    endif
+endif
+TARGET ?= $(HOST_PLATFORM)
+
+# Validate target
+SUPPORTED_TARGETS := linux win32 wasm
+ifneq ($(filter $(TARGET),$(SUPPORTED_TARGETS)),)
+    # Set toolchain based on target
+    CC := $(CC.$(TARGET))
+    CFLAGS_PLATFORM := $(CFLAGS.$(TARGET))
+    LDFLAGS_PLATFORM := $(LDFLAGS.$(TARGET))
+    EXT := $(EXT.$(TARGET))
+else
+    $(error Unsupported TARGET. Choose from: $(SUPPORTED_TARGETS))
 endif
 
-CFLAGS  := -Wall -Wextra -Wpedantic -Wconversion -fPIC -std=gnu11 -I $(SRC)
+# Default to dev mode
+MODE ?= dev
 
-CFILES := $(shell cd $(SRC) && find -L * -type f -name '*.c' | LC_ALL=C sort)
-OBJ    := $(addprefix $(BUILD)/,$(CFILES:.c=.c.o)) 
+# Set build flags based on mode
+ifeq ($(MODE),prod)
+    CFLAGS := $(CFLAGS_PROD) $(CFLAGS_PLATFORM)
+    LDFLAGS := $(LDFLAGS_PROD) $(LDFLAGS_PLATFORM)
+else
+    CFLAGS := $(CFLAGS_DEV) $(CFLAGS_PLATFORM)
+    LDFLAGS := $(LDFLAGS_DEV) $(LDFLAGS_PLATFORM)
+endif
 
-.PHONY: all debug run clean examples clean-all install uninstall
+# Final Output
+LIBRARY := $(BIN_DIR)/$(NAME)$(EXT)
 
-all: examples
+# Phony Targets
+.PHONY: all dev prod install uninstall clean
 
-install: $(OUTPUT)
-	install $(OUTPUT) /usr/lib/
-	install $(SRC)/classparse.h /usr/include/
+all: $(LIBRARY)
+
+dev:
+	$(MAKE) MODE=dev
+
+prod:
+	$(MAKE) MODE=prod
+
+# Main Build Rule
+$(LIBRARY): $(OBJS) | $(BIN_DIR)
+	$(CC) $(OBJS) $(LDFLAGS) -o $@
+
+# Object File Rule
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.c | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Directory Creation
+$(BUILD_DIR) $(BIN_DIR):
+	mkdir -p $@
+
+# Clean
+clean:
+	rm -rf $(BUILD_DIR) $(BIN_DIR)
+
+# Install/Uninstall
+install: $(LIBRARY)
+	@if [ "$(TARGET)" != "linux" ]; then \
+		echo "Error: Can only install Linux target (.so)"; \
+		exit 1; \
+	fi
+	cp $(HEADER) /usr/local/include/
+	cp $(LIBRARY) /usr/local/lib/
+	ldconfig
 
 uninstall:
-	rm -f /usr/include/classparse.h
-	rm -f /usr/lib/libclassparse.so
-
-debug: CFLAGS += -DDEBUG -g -O0 -fsanitize=address
-debug: LDFLAGS += -g -pg -fsanitize=address
-debug: examples
-
-examples: $(OUTPUT)
-	@printf "\033[32m==> Building examples\033[0m\n"
-	$(MAKE) -C examples/
-
-clean:
-	@printf "\033[32m==> Clean up\033[0m\n"
-	rm -rf $(BUILD)
-	mkdir -p $(BUILD)
-
-clean-all: clean
-	@printf "\033[32m==> Clean up\033[0m\n"
-	rm -rf examples/build/
-	mkdir -p examples/build/
-
-$(OUTPUT): $(OBJ)
-	@printf "\033[32m==> Linking object files\033[0m\n"
-	mkdir -p "$$(dirname $@)"
-	$(LD) $(OBJ) $(LDFLAGS) -o $@
-
-$(BUILD)/%.c.o: $(SRC)/%.c
-	mkdir -p "$$(dirname $@)"
-	$(CC) $(CFLAGS) -c $< -o $@
+	@if [ "$(TARGET)" != "linux" ]; then \
+		echo "Error: Can only uninstall Linux target (.so)"; \
+		exit 1; \
+	fi
+	rm -f /usr/local/include/$(NAME).h
+	rm -f /usr/local/lib/$(NAME)$(EXT)
+	ldconfig

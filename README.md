@@ -1,19 +1,71 @@
 <div align="center">
   <h1>classparse</h1>
-  Simple and easy to use Java classfile parser.
+  C based Java classfile parser. Simple and easy.
 </div>
 
 ## Getting Started
-As of now, the library itself is not yet published to any repository. You will need to build it manually.
+Using classparse is easy, refer to the building section on guide how to install.
+Basic usage is covered in the examples section.
 
-### Building
+## Installation and Building
 
-Luckily, building the project is very easy! The only thing you will need is `make`, and follow these steps:
-1) Clone the repository with `git`
-2) Navigate to the directory
-3) Run `make` or `make all`(they do the same thing). This will build the library. The library will appear in the `build/` directory.
-4) Optionally run `make install` to copy the library & header files into `/usr/include/` and `/usr/lib/`.
-5) You're now good to go! Don't forget to link with `libclassparse`!
+To build and install the library globally:
+
+```bash
+make TARGET=linux       # Build for Linux
+sudo make install       # Install header and shared library
+```
+
+### Build Targets
+
+| Command | Description |
+|---------|-------------|
+| `make` or `make dev` | Development build (sanitizers, debug symbols, profiling) |
+| `make prod` | Production build (optimized with `-O3` and LTO) |
+
+### Platform Selection
+
+Append `TARGET=<platform>` to any build command:
+
+| Target | Description | Output Extension |
+|--------|-------------|------------------|
+| `TARGET=linux` | Linux shared library | `.so` |
+| `TARGET=win32` | Windows DLL | `.dll` |
+| `TARGET=wasm` | WebAssembly module | `.wasm` |
+
+Examples:
+```bash
+make dev TARGET=wasm    # Dev build for WebAssembly
+make prod TARGET=win32  # Optimized Windows build
+```
+
+### Maintenance Tasks
+
+| Command | Description |
+|---------|-------------|
+| `make clean` | Remove all build artifacts |
+| `sudo make install` | Install Linux library and headers (requires `TARGET=linux`) |
+| `sudo make uninstall` | Remove installed files |
+
+## Build Configuration
+
+### Development Mode (`make dev`)
+- Compiler: `-std=gnu11`
+- Flags: `-g -Wall -Wextra -fsanitize=address -fno-omit-frame-pointer -pg`
+- No optimizations
+
+### Production Mode (`make prod`)
+- Compiler: `-std=gnu11` 
+- Flags: `-O3 -flto -Wall -Wextra`
+- Full optimizations enabled
+
+## Directory Structure
+```
+project/
+├── bin/       # Final binaries
+├── build/     # Intermediate objects
+└── src/       # Source files
+```
 
 ## Examples
 Examples can be found inside the `examples/` directory, you can compile all of them using the `make` command.
@@ -27,7 +79,7 @@ These are some of the most commonly used functions:
 The rest of them can be found in the [classparse.h](src/classparse.h)
 
 ## Contributing
-The library is pretty easy to understand, so if you have any recommendations, feel free to submit your changes as PR, I will gladly marge them!
+The library is pretty easy to understand, so if you have any recommendations, feel free to submit your changes as PR, I will gladly merge them!
 
 ## License
 

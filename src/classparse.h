@@ -493,6 +493,14 @@ typedef struct {
     Annotation *annotations;
 } RuntimeInvisibleAnnotationsAttribute;
 
+typedef struct {
+    uint8_t parameters_count;
+    struct {
+        Utf8Info *name;
+        uint16_t access_flags;
+    } *parameters;
+} MethodParameters;
+
 struct _attribute_info {
     Utf8Info attribute_name;
     uint32_t attribute_length;
@@ -696,8 +704,8 @@ CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
 CLASSPARSE_EXPORT char *InMemoryPeekClassName(void *stream);
 
 /**
- * Returns a dynamically allocated pointer to a string containing a name of the opcode in all uppercase(i.e. "ILOAD_1").
+ * Returns a string containing a name of the opcode in all uppercase(i.e. "ILOAD_1").
  */
-CLASSPARSE_EXPORT char *GetInstructionByName(uint8_t opcode);
+CLASSPARSE_EXPORT char *GetInstructionName(uint8_t opcode);
 
 #endif // CLASSPARSE_H
