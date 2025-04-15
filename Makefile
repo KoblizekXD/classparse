@@ -73,6 +73,8 @@ endif
 # Final Output
 LIBRARY := $(BIN_DIR)/lib$(NAME)$(EXT)
 
+CFLAGS += -I$(SRC_DIR)
+
 # Phony Targets
 .PHONY: all dev prod install uninstall clean
 
