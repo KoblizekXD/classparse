@@ -74,11 +74,11 @@ AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length,
                 item->data.code.exception_table = malloc(sizeof(struct _exc_table) * item->data.code.exception_table_length);
                 for (uint16_t j = 0; j < item->data.code.exception_table_length; j++) {
                     read_16(stream, &ui);
-                    item->data.code.exception_table[j].start_pc = item->data.code.code + (ui - 1);
+                    item->data.code.exception_table[j].start_pc = item->data.code.code + ui;
                     read_16(stream, &ui);
-                    item->data.code.exception_table[j].end_pc = item->data.code.code + (ui - 1);
+                    item->data.code.exception_table[j].end_pc = item->data.code.code + ui;
                     read_16(stream, &ui);
-                    item->data.code.exception_table[j].handler_pc = item->data.code.code + (ui - 1);
+                    item->data.code.exception_table[j].handler_pc = item->data.code.code + ui;
                     read_16(stream, &ui);
                     if (ui != 0)
                         item->data.code.exception_table[j].catch_type = &pool[ui - 1].info._class;
