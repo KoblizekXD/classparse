@@ -6,6 +6,7 @@ SRC_DIR := src
 BUILD_DIR := build
 BIN_DIR := bin
 HEADER := $(SRC_DIR)/$(NAME).h
+MINIMAL ?= 0
 
 # Toolchain Configuration
 CC.linux := gcc
@@ -74,6 +75,10 @@ endif
 LIBRARY := $(BIN_DIR)/lib$(NAME)$(EXT)
 
 CFLAGS += -I$(SRC_DIR)
+
+ifeq ($(MINIMAL),1)
+	CFLAGS += -DMINIMAL
+endif
 
 # Phony Targets
 .PHONY: all dev prod install uninstall clean

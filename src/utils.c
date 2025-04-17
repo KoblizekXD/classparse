@@ -184,6 +184,8 @@ size_t GetParameterSize(Method *method, uint16_t offset)
     return -1;
 }
 
+#ifndef MINIMAL
+
 char *GetInstructionName(uint8_t opcode)
 {
     switch (opcode) {
@@ -395,3 +397,5 @@ char *GetInstructionName(uint8_t opcode)
         default: return "UNKNOWN";
     }
 }
+
+#endif

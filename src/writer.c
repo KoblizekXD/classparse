@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef MINIMAL
+
 int write16(FILE *stream, uint16_t value, int target)
 {
     uint16_t val;
@@ -121,3 +123,4 @@ int write_cp(ConstantPool cp, uint16_t count, FILE *stream, int target)
     return 1;
 }
 
+#endif

@@ -546,8 +546,6 @@ typedef struct {
     AttributeInfo *attributes;
 } Method;
 
-#define NOCODE -1
-
 struct _class_file {
     uint32_t magic;
     uint16_t minor_version;
@@ -593,6 +591,8 @@ CLASSPARSE_EXPORT ClassFile *ReadFromStream(FILE *stream);
  */
 CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
 
+#ifndef MINIMAL
+
 #define OUTPUT_LE 0
 #define OUTPUT_BE 1
 
@@ -604,6 +604,8 @@ CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
  * @target Either OUTPUT_LE or OUTPUT_BE, resulting endianness of the classfile.
  */
 CLASSPARSE_EXPORT int WriteToStream(ClassFile *cf, FILE *stream, int target);
+
+#endif
 
 /**
  * Frees given class file.
@@ -703,9 +705,13 @@ CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
  */
 CLASSPARSE_EXPORT char *InMemoryPeekClassName(void *stream);
 
+#ifndef MINIMAL
+
 /**
  * Returns a string containing a name of the opcode in all uppercase(i.e. "ILOAD_1").
  */
 CLASSPARSE_EXPORT char *GetInstructionName(uint8_t opcode);
+
+#endif
 
 #endif // CLASSPARSE_H
