@@ -61,6 +61,7 @@ extern void *malloc(size_t size);
 extern int read_16_ptr(void *stream, int *cursor, uint16_t *var);
 extern int read_32_ptr(void *stream, int *cursor, uint32_t *var);
 extern AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
+extern size_t get_attributes_alloc_size(void *stream, int *cursor, ConstantPool pool, uint16_t length);
 AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
 
 Field *read_fields_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length)
@@ -103,4 +104,16 @@ Method *read_methods_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t 
 
     }
     return methods;
+}
+
+size_t calculate_field_method_alloc_size(void *stream, int *cursor, ConstantPool pool, uint16_t length)
+{
+    size_t total = length * sizeof(Field);
+    uint16_t ui;
+    for (uint16_t i = 0; i < length; i++) {
+        *cursor += 6;
+        read_16_ptr(stream, cursor, &ui);
+        total += get_attributes_alloc_size(stream, cursor, pool, ui);
+    }
+    return total;
 }

@@ -605,6 +605,11 @@ CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
 #endif
 
 /**
+ * Returns a size required to allocate classfile stored at given pointer.
+ */
+CLASSPARSE_EXPORT size_t CalculateRequiredSize(void *ptr);
+
+/**
  * Attempts to read a standard JVM class file object from the given in-memory pointer.
  *
  * If reading fails, the program will probably crash due to read from unknown region(segfault).
@@ -703,13 +708,9 @@ CLASSPARSE_EXPORT char GetReturnType(Method *method);
  */
 CLASSPARSE_EXPORT char *InMemoryPeekClassName(void *stream);
 
-#ifndef MINIMAL
-
 /**
  * Returns a string containing a name of the opcode in all uppercase(i.e. "ILOAD_1").
  */
 CLASSPARSE_EXPORT char *GetInstructionName(uint8_t opcode);
-
-#endif
 
 #endif // CLASSPARSE_H

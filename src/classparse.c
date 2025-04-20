@@ -441,3 +441,83 @@ char *InMemoryPeekClassName(void *stream)
 
     return to_ret;
 }
+
+static size_t get_cp_alloc_size(uint16_t count, void *stream, int *cursor)
+{
+    uint16_t ui;
+    size_t total_size = sizeof(ConstantPoolEntry) * count;
+
+    for (uint16_t i = 0; i < count; i++) {
+        uint8_t tag = *((uint8_t*) stream + *cursor);
+        (*cursor)++;
+
+        switch (tag) {
+            case CONSTANT_Class:
+            case CONSTANT_String:
+            case CONSTANT_MethodType:
+            case CONSTANT_Module:
+            case CONSTANT_Package:
+                *cursor += 2;
+                break;
+
+            case CONSTANT_Fieldref:
+            case CONSTANT_InterfaceMethodref:
+            case CONSTANT_Methodref:
+            case CONSTANT_NameAndType:
+            case CONSTANT_Dynamic:
+            case CONSTANT_InvokeDynamic:
+                *cursor += 4;
+                break;
+
+            case CONSTANT_Integer:
+            case CONSTANT_Float:
+                *cursor += 4;
+                break;
+
+            case CONSTANT_Long:
+            case CONSTANT_Double:
+                *cursor += 8;
+                i++;
+                break;
+
+            case CONSTANT_Utf8:
+                read_16_ptr(stream, cursor, &ui);
+                *cursor += ui;
+                total_size += ui + 1;
+                break;
+
+            case CONSTANT_MethodHandle:
+                (*cursor)++;
+                *cursor += 2;
+                break;
+
+            default:
+                return 0;
+        }
+    }
+
+    return total_size;
+}
+
+extern size_t calculate_field_method_alloc_size(void *stream, int *cursor, ConstantPool pool, uint16_t length);
+extern size_t calculate_attributes_alloc_size(void *stream, int *cursor, ConstantPool pool, uint16_t length);
+
+CLASSPARSE_EXPORT size_t CalculateRequiredSize(void *ptr)
+{
+    size_t total = sizeof(ClassFile);
+    int cursor = 8;
+    uint16_t ui;
+    read_16_ptr(ptr, &cursor, &ui);
+    ui--;
+    total += get_cp_alloc_size(ui, ptr, &cursor);
+    cursor += 6;
+    read_16_ptr(ptr, &cursor, &ui);
+    cursor += (ui * 2);
+    read_16_ptr(ptr, &cursor, &ui); 
+    total += calculate_field_method_alloc_size(ptr, &cursor, cpool, ui);
+    read_16_ptr(ptr, &cursor, &ui); 
+    total += calculate_field_method_alloc_size(ptr, &cursor, cpool, ui);
+    read_16_ptr(ptr, &cursor, &ui);
+    total += calculate_attributes_alloc_size(ptr, &cursor, cpool, ui);
+    return total;
+}

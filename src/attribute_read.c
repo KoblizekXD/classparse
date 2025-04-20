@@ -337,6 +337,94 @@ AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool,
     return info;
 }
 
+size_t get_annotation_size(void *stream, int *cursor, ConstantPool pool);
+
+size_t calculate_attributes_alloc_size(void *stream, int *cursor, ConstantPool pool, uint16_t length)
+{
+    size_t total_size = sizeof(AttributeInfo) * length;
+    uint16_t ui;
+
+    for (size_t i = 0; i < length; i++) {
+        read_16_ptr(stream, cursor, &ui);
+        uint32_t attribute_length;
+        read_32_ptr(stream, cursor, &attribute_length);
+        int type = translate_attribute_name(pool[ui - 1].info.utf8);
+
+        switch (type) {
+            case ATTR_CONSTANT_VALUE:
+                *cursor += 2;
+                break;
+            case ATTR_CODE: {
+                uint16_t max_stack, max_locals, exception_table_length, code_attributes_count;
+                uint32_t code_length;
+
+                read_16_ptr(stream, cursor, &max_stack);
+                read_16_ptr(stream, cursor, &max_locals);
+                read_32_ptr(stream, cursor, &code_length);
+
+                total_size += code_length * sizeof(uint8_t);
+                *cursor += code_length;
+
+                read_16_ptr(stream, cursor, &exception_table_length);
+                total_size += exception_table_length * sizeof(struct _exc_table);
+                *cursor += exception_table_length * 8; // 4 x u2 per exception table entry
+
+                read_16_ptr(stream, cursor, &code_attributes_count);
+                total_size += get_attributes_alloc_size(stream, cursor, pool, code_attributes_count);
+                break;
+            }
+            case ATTR_STACK_MAP_TABLE:
+                *cursor += attribute_length;
+                break;
+            case ATTR_BOOTSTRAP_METHODS: {
+                read_16_ptr(stream, cursor, &ui);
+                total_size += ui * sizeof(struct bootstrap_method);
+                for (uint16_t j = 0; j < ui; j++) {
+                    read_16_ptr(stream, cursor, &ui); // method handle
+                    read_16_ptr(stream, cursor, &ui); // arg count
+                    total_size += ui * sizeof(ConstantPoolEntry *);
+                    *cursor += ui * 2;
+                }
+                break;
+            }
+            case ATTR_NEST_HOST:
+                *cursor += 2;
+                break;
+            case ATTR_NEST_MEMBERS:
+            case ATTR_PERMITTED_SUBCLASSES: {
+                read_16_ptr(stream, cursor, &ui);
+                total_size += ui * sizeof(ClassInfo *);
+                *cursor += ui * 2;
+                break;
+            }
+            case ATTR_DEPRECATED:
+                break;
+            case ATTR_SOURCE_FILE:
+                *cursor += 2;
+                break;
+            case ATTR_LINE_NUMBER_TABLE: {
+                read_16_ptr(stream, cursor, &ui);
+                total_size += ui * sizeof(struct line_number_table);
+                *cursor += ui * 4;
+                break;
+            }
+            case ATTR_RUNTIME_INVISIBLE_ANNOTATIONS: {
+                read_16_ptr(stream, cursor, &ui);
+                total_size += ui * sizeof(Annotation);
+                for (size_t j = 0; j < ui; j++) {
+                    total_size += get_annotation_size(stream, cursor, pool);
+                }
+                break;
+            }
+            default:
+                *cursor += attribute_length;
+                break;
+        }
+    }
+    
+    return total_size;
+}
+
 Annotation _read_annotation_ptr(void *stream, int *cursor, ConstantPool pool)
 {
     Annotation a;
@@ -384,4 +472,42 @@ Annotation _read_annotation_ptr(void *stream, int *cursor, ConstantPool pool)
         }
     }
     return a;
+}
+
+size_t get_annotation_size(void *stream, int *cursor, ConstantPool pool)
+{
+    uint16_t ui;
+    size_t size = sizeof(Annotation);
+
+    read_16_ptr(stream, cursor, &ui); // type_index
+    read_16_ptr(stream, cursor, &ui); // num_element_value_pairs
+    size += sizeof(struct _annotation_kv_pair) * ui;
+
+    for (size_t i = 0; i < ui; i++) {
+        read_16_ptr(stream, cursor, &ui);
+        uint8_t tag = *((uint8_t *) stream + *cursor);
+        (*cursor)++;
+
+        switch (tag) {
+            case 'B': case 'C': case 'D': case 'F':
+            case 'I': case 'J': case 'S': case 'Z':
+            case 's':
+                cursor += 2;
+                break;
+            case 'e':
+                cursor += 4;
+                break;
+            case 'c':
+                cursor += 2;
+                break;
+            case '@':
+                size += get_annotation_size(stream, cursor, pool);
+                break;
+            case '[':
+                // Currently skipped (as in original code)
+                break;
+        }
+    }
+
+    return size;
 }
