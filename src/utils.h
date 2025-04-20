@@ -4,7 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define INPUT_IS_LITTLE_ENDIAN 1
+#ifndef INPUT_IS_LITTLE_ENDIAN
+#define INPUT_IS_LITTLE_ENDIAN 0
+#endif
 
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     #define HOST_IS_LITTLE_ENDIAN 1
@@ -54,7 +56,7 @@ void *classparse_memcpy(void* dest, const void* src, size_t n)
     
     if (d > s && d < s + n) {
         for (size_t i = n; i > 0; i--) {
-            d[i-1] = s[i-1];
+            d[i - 1] = s[i - 1];
         }
     } else {
         for (size_t i = 0; i < n; i++) {
@@ -65,7 +67,7 @@ void *classparse_memcpy(void* dest, const void* src, size_t n)
     return dest;
 }
 
-static inline uint16_t read_u16_ptr(const uint8_t **stream)
+static inline uint16_t read_u16_ptr(uint8_t **stream)
 {
     uint16_t val;
     classparse_memcpy(&val, *stream, sizeof(uint16_t));
@@ -73,7 +75,7 @@ static inline uint16_t read_u16_ptr(const uint8_t **stream)
     return TO_HOST_16(val);
 }
 
-static inline uint32_t read_u32_ptr(const uint8_t **stream) 
+static inline uint32_t read_u32_ptr(uint8_t **stream) 
 {
     uint32_t val;
     classparse_memcpy(&val, *stream, sizeof(uint32_t));
@@ -81,12 +83,14 @@ static inline uint32_t read_u32_ptr(const uint8_t **stream)
     return TO_HOST_32(val);
 }
 
-static inline uint64_t read_u64_ptr(const uint8_t **stream)
+static inline uint64_t read_u64_ptr(uint8_t **stream)
 {
     uint64_t val;
     classparse_memcpy(&val, *stream, sizeof(uint64_t));
     *stream += sizeof(uint64_t);
     return TO_HOST_64(val);
 }
+
+#define skip(PTR, N) *PTR += N
 
 #endif // CLASSPARSE_UTILS_H

@@ -14,8 +14,10 @@
 #define CLASSPARSE_EXPORT EMSCRIPTEN_KEEPALIVE
 #elif defined(_WIN32)
 #define CLASSPARSE_EXPORT __declspec(dllexport)
-#else
+#elif defined(__GNUC__) && !defined(__freestanding__)
 #define CLASSPARSE_EXPORT __attribute__((visibility("default")))
+#else
+#define CLASSPARSE_EXPORT
 #endif
 
 // ===================================================== CONSTANTS
@@ -566,7 +568,7 @@ struct _class_file {
 
 // ===================================================== FUNCTIONS
 
-#ifndef STANDALONE
+#ifndef __freestanding__
 
 #include <stdio.h>
 
@@ -594,20 +596,26 @@ CLASSPARSE_EXPORT ClassFile *ReadFromStream(FILE *stream);
 CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
 
 /**
- * Writes a parsed classfile into a writable stream.
- *
- * @param cf The classfile that will be written into a JVM-compatible structure.
- * @param stream The stream to write to.
- * @target Either OUTPUT_LE or OUTPUT_BE, resulting endianness of the classfile.
+ * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
+ * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
  */
-// CLASSPARSE_EXPORT int WriteToStream(ClassFile *cf, FILE *stream, int target);
-
-#endif
+CLASSPARSE_EXPORT char *InMemoryPeekClassName(void *stream);
 
 /**
- * Returns a size required to allocate classfile stored at given pointer.
+ * Frees given class file.
+ * No error will appear if operation fails.
+ *
+ * @param cf Classfile to free.
  */
-CLASSPARSE_EXPORT size_t CalculateRequiredSize(void *ptr);
+CLASSPARSE_EXPORT void FreeClassFile(ClassFile *cf);
+
+#endif // __freestanding__
+
+/**
+ * Returns a complete size required to allocate classfile starting at provided pointer. This
+ * includes space for all the strings. This also assumes that PTR is available at all times.
+ */
+CLASSPARSE_EXPORT size_t CalculateRequiredSize(uint8_t *ptr);
 
 /**
  * Attempts to read a standard JVM class file object from the given in-memory pointer.
@@ -619,13 +627,7 @@ CLASSPARSE_EXPORT size_t CalculateRequiredSize(void *ptr);
  */
 CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
 
-/**
- * Frees given class file.
- * No error will appear if operation fails.
- *
- * @param cf Classfile to free.
- */
-CLASSPARSE_EXPORT void FreeClassFile(ClassFile *cf);
+// ========================================================== UTILITY FUNCTIONS
 
 /**
  * Locates a method with the given name from the given classfile.
@@ -701,12 +703,6 @@ CLASSPARSE_EXPORT size_t GetParameterSize(Method *method, uint16_t offset);
  * in addition to `void` return type, which will have the `V` character.
  */
 CLASSPARSE_EXPORT char GetReturnType(Method *method);
-
-/**
- * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
- * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
- */
-CLASSPARSE_EXPORT char *InMemoryPeekClassName(void *stream);
 
 /**
  * Returns a string containing a name of the opcode in all uppercase(i.e. "ILOAD_1").
