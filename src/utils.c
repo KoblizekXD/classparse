@@ -1,6 +1,10 @@
 #include <classparse.h>
 #include <stdint.h>
-#include <string.h>
+
+extern int strcmp(const char *s1, const char *s2);
+extern char *strchr(const char *s, int c);
+extern char *strrchr(const char *s, int c);
+extern size_t strlen(const char *s);
 
 Method *GetMethodByName(ClassFile *cf, const char *name)
 {

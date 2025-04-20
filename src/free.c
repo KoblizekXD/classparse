@@ -1,7 +1,7 @@
 #include <classparse.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+
+extern void free(void *ptr);
 
 void free_attribute_array(AttributeInfo *attributes, uint16_t length)
 {

@@ -39,13 +39,21 @@ make dev TARGET=wasm    # Dev build for WebAssembly
 make prod TARGET=win32  # Optimized Windows build
 ```
 
-### Maintenance Tasks
+### Standalone mode
+*Enable by defining the `STANDALONE` macro or setting STANDALONE=1 in Makefile*
 
-| Command | Description |
-|---------|-------------|
-| `make clean` | Remove all build artifacts |
-| `sudo make install` | Install Linux library and headers (requires `TARGET=linux`) |
-| `sudo make uninstall` | Remove installed files |
+Classparse supports standalone mode, which will use minimal amount of functions from the standard C library.
+This is optimal for things like custom operating systems or any non-libc compliant systems.
+Heres a list of `extern`'d functions, which needs to be present:
+
+1) `void *malloc(size_t size)`, `void free(void *ptr)` - required for memory allocations
+2) `int strcmp(const char *s1, const char *s2)`
+3) `char *strcpy(char *dest, const char *src)`
+4) `char *strchr(const char *s, int c)`, `char *strrchr(const char *s, int c)`
+5) `size_t strlen(const char *ptr)`
+6) `void *memcpy(void *dest, const void *src)`
+
+We tried to strip it down as much as possible, but some of these are just necessity :)
 
 ### Build Configuration
 

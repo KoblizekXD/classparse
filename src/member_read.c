@@ -1,15 +1,14 @@
 #include <classparse.h>
-#include <stdio.h>
 #include <stdint.h>
+
+#ifndef STANDALONE
+
 #include <stdlib.h>
+#include <stdio.h>
 
 extern int read_16(FILE *stream, uint16_t *var);
 extern int read_32(FILE *stream, uint32_t *var);
-extern int read_16_ptr(void *stream, int *cursor, uint16_t *var);
-extern int read_32_ptr(void *stream, int *cursor, uint32_t *var);
 extern AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length, void *declared_by);
-extern AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
-AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
 
 Field *read_fields(FILE *stream, ConstantPool pool, uint16_t length)
 {
@@ -52,6 +51,17 @@ Method *read_methods(FILE *stream, ConstantPool pool, uint16_t length)
     }
     return methods;
 }
+
+#else
+
+extern void *malloc(size_t size);
+
+#endif // STANDALONE
+
+extern int read_16_ptr(void *stream, int *cursor, uint16_t *var);
+extern int read_32_ptr(void *stream, int *cursor, uint32_t *var);
+extern AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
+AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
 
 Field *read_fields_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length)
 {

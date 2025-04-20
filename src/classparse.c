@@ -1,7 +1,42 @@
 #include <classparse.h>
-#include <endian.h>
-#include <errno.h>
 #include <stdint.h>
+
+#ifdef __linux__
+
+#include <endian.h>
+
+#elif defined(_WIN32)
+
+#include <winsock2.h>
+
+#define be16toh(x) ntohs(x)
+#define be32toh(x) ntohl(x)
+
+#else
+
+#include <stdint.h>
+
+static inline uint16_t be16toh(uint16_t x) {
+    return ((x & 0x00FF) << 8) |
+           ((x & 0xFF00) >> 8);
+}
+
+static inline uint32_t be32toh(uint32_t x) {
+    return ((x & 0x000000FFU) << 24) |
+           ((x & 0x0000FF00U) << 8)  |
+           ((x & 0x00FF0000U) >> 8)  |
+           ((x & 0xFF000000U) >> 24);
+}
+
+#endif
+
+extern Field *read_fields_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length);
+extern Method *read_methods_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length);
+extern AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
+
+#ifndef STANDALONE
+
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,9 +44,6 @@
 extern AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length, void *declared_by);
 extern Method *read_methods(FILE *stream, ConstantPool pool, uint16_t length);
 extern Field *read_fields(FILE *stream, ConstantPool pool, uint16_t length);
-extern Field *read_fields_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length);
-extern Method *read_methods_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length);
-extern AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by);
 
 int read_16(FILE *stream, uint16_t *var)
 {
@@ -28,22 +60,6 @@ int read_32(FILE *stream, uint32_t *var)
     if (fread(&temp, sizeof(uint32_t), 1, stream) != 1)
         return 0;
     *var = be32toh(temp);
-    return 1;
-}
-
-int read_16_ptr(void *stream, int *cursor, uint16_t *var)
-{
-    *var = *(uint16_t *)((uint8_t *)stream + *cursor);
-    *var = be16toh(*var);
-    *cursor += 2;
-    return 1;
-}
-
-int read_32_ptr(void *stream, int *cursor, uint32_t *var)
-{
-    *var = *(uint32_t *)((uint8_t *)stream + *cursor);
-    *var = be32toh(*var);
-    *cursor += 4;
     return 1;
 }
 
@@ -135,12 +151,131 @@ static ConstantPool read_cp(uint16_t count, FILE *stream)
     return cp;
 }
 
+ClassFile *ReadFromStream(FILE *stream)
+{
+    void *temp_ptr;
+    if (stream == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    checked_malloc(ClassFile *cf, sizeof(ClassFile));
+    read_32(stream, &cf->magic);
+    if (cf->magic != 0xCAFEBABE) {
+        errno = EIO;
+        return NULL;
+    }
+    read_16(stream, &cf->minor_version);
+    read_16(stream, &cf->major_version);
+    read_16(stream, &cf->contant_pool_size);
+    cf->contant_pool_size--;
+    cf->constant_pool = read_cp(cf->contant_pool_size, stream);
+    read_16(stream, &cf->access_flags);
+    uint16_t classIndex;
+    read_16(stream, &classIndex);
+    cf->name = *cf->constant_pool[classIndex - 1].info._class.name;
+    read_16(stream, &classIndex);
+    if (strcmp(cf->name, "java/lang/Object") == 0)
+        cf->super_name = NULL;
+    else if (classIndex == 0)
+        cf->super_name = "java/lang/Object";
+    else cf->super_name = *cf->constant_pool[classIndex - 1].info._class.name;
+    read_16(stream, &cf->interface_count);
+    cf->interfaces = malloc(sizeof(char*) * cf->interface_count);
+    for (size_t i = 0; i < cf->interface_count; i++) {
+        read_16(stream, &classIndex);
+        cf->interfaces[i] = *cf->constant_pool[classIndex - 1].info._class.name;
+    }
+    read_16(stream, &cf->field_count);
+    cf->fields = read_fields(stream, cf->constant_pool, cf->field_count);
+    for (size_t i = 0; i < cf->field_count; i++) {
+        cf->fields[i].cf = cf;
+    }
+    read_16(stream, &cf->method_count);
+    cf->methods = read_methods(stream, cf->constant_pool, cf->method_count);
+    for (size_t i = 0; i < cf->method_count; i++) {
+        cf->methods[i].cf = cf;
+    }
+    read_16(stream, &cf->attribute_count);
+    cf->attributes = read_attributes(stream, cf->constant_pool, cf->attribute_count, NULL);
+    return cf;
+}
+
+char *PeekClassName(FILE *stream)
+{
+    if (stream == NULL)
+    {
+        errno = EINVAL;
+        return NULL;
+    }
+    uint32_t ui32;
+    uint16_t ui;
+
+    read_32(stream, &ui32);
+    if (ui32 != 0xCAFEBABE) {
+        errno = EIO;
+        return NULL;
+    }
+    read_16(stream, &ui);
+    read_16(stream, &ui);
+    read_16(stream, &ui);
+    uint16_t cpool_size = ui - 1;
+    ConstantPool pool = read_cp(cpool_size, stream);
+    read_16(stream, &ui);
+    read_16(stream, &ui);
+    char *name = *pool[ui - 1].info._class.name;
+    char *to_ret = malloc(strlen(name) + 1);
+
+    if (!to_ret) {
+        free(pool);
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    strcpy(to_ret, name);
+
+    for (uint16_t i = 0; i < cpool_size; i++) {
+        ConstantPoolEntry *entry = &pool[i];
+        if (entry->tag == CONSTANT_Utf8)
+            free(entry->info.utf8);
+    }
+    free(pool);
+
+    return to_ret;
+}
+#else
+
+extern void *malloc(size_t size);
+extern void free(void *ptr);
+extern char *strcpy(char *dst, const char *src);
+extern size_t strlen(const char *str);
+extern int strcmp(const char *s1, const char *s2);
+extern void *memcpy(void *dest, const void *src, size_t size);
+
+#endif // STANDALONE
+
+int read_16_ptr(void *stream, int *cursor, uint16_t *var)
+{
+    *var = *(uint16_t *)((uint8_t *)stream + *cursor);
+    *var = be16toh(*var);
+    *cursor += 2;
+    return 1;
+}
+
+int read_32_ptr(void *stream, int *cursor, uint32_t *var)
+{
+    *var = *(uint32_t *)((uint8_t *)stream + *cursor);
+    *var = be32toh(*var);
+    *cursor += 4;
+    return 1;
+}
+
 static ConstantPool read_cp_ptr(uint16_t count, void *stream, int *cursor)
 {
     uint16_t ui;
     uint32_t ui32;
-    void *temp_ptr;
-    checked_malloc(ConstantPool cp, sizeof(ConstantPoolEntry) * count);
+    ConstantPool cp = malloc(sizeof(ConstantPoolEntry) * count);
     for (uint16_t i = 0; i < count; i++) {
         ConstantPoolEntry *entry = &cp[i];
         entry->tag = *((uint8_t*) stream + *cursor);
@@ -211,78 +346,23 @@ static ConstantPool read_cp_ptr(uint16_t count, void *stream, int *cursor)
                 entry->info.mod_package.name = &cp[ui - 1].info.utf8;
                 break;
             default:
-                fprintf(stderr, "Cannot interpret constant pool tag: %d\n", entry->tag);
                 return NULL;
         }
     }
     return cp;
 }
 
-ClassFile *ReadFromStream(FILE *stream)
-{
-    void *temp_ptr;
-    if (stream == NULL)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    checked_malloc(ClassFile *cf, sizeof(ClassFile));
-    read_32(stream, &cf->magic);
-    if (cf->magic != 0xCAFEBABE) {
-        errno = EIO;
-        return NULL;
-    }
-    read_16(stream, &cf->minor_version);
-    read_16(stream, &cf->major_version);
-    read_16(stream, &cf->contant_pool_size);
-    cf->contant_pool_size--;
-    cf->constant_pool = read_cp(cf->contant_pool_size, stream);
-    read_16(stream, &cf->access_flags);
-    uint16_t classIndex;
-    read_16(stream, &classIndex);
-    cf->name = *cf->constant_pool[classIndex - 1].info._class.name;
-    read_16(stream, &classIndex);
-    if (strcmp(cf->name, "java/lang/Object") == 0)
-        cf->super_name = NULL;
-    else if (classIndex == 0)
-        cf->super_name = "java/lang/Object";
-    else cf->super_name = *cf->constant_pool[classIndex - 1].info._class.name;
-    read_16(stream, &cf->interface_count);
-    cf->interfaces = malloc(sizeof(char*) * cf->interface_count);
-    for (size_t i = 0; i < cf->interface_count; i++) {
-        read_16(stream, &classIndex);
-        cf->interfaces[i] = *cf->constant_pool[classIndex - 1].info._class.name;
-    }
-    read_16(stream, &cf->field_count);
-    cf->fields = read_fields(stream, cf->constant_pool, cf->field_count);
-    for (size_t i = 0; i < cf->field_count; i++) {
-        cf->fields[i].cf = cf;
-    }
-    read_16(stream, &cf->method_count);
-    cf->methods = read_methods(stream, cf->constant_pool, cf->method_count);
-    for (size_t i = 0; i < cf->method_count; i++) {
-        cf->methods[i].cf = cf;
-    }
-    read_16(stream, &cf->attribute_count);
-    cf->attributes = read_attributes(stream, cf->constant_pool, cf->attribute_count, NULL);
-    return cf;
-}
-
 ClassFile *ReadFrom(void *stream)
 {
     int cursor = 0;
-    void *temp_ptr;
     if (stream == NULL)
     {
-        errno = EINVAL;
         return NULL;
     }
 
-    checked_malloc(ClassFile *cf, sizeof(ClassFile));
+    ClassFile *cf = malloc(sizeof(ClassFile));
     read_32_ptr(stream, &cursor, &cf->magic);
     if (cf->magic != 0xCAFEBABE) {
-        errno = EIO;
         return NULL;
     }
     read_16_ptr(stream, &cursor, &cf->minor_version);
@@ -321,55 +401,11 @@ ClassFile *ReadFrom(void *stream)
     return cf;
 }
 
-char *PeekClassName(FILE *stream)
-{
-    if (stream == NULL)
-    {
-        errno = EINVAL;
-        return NULL;
-    }
-    uint32_t ui32;
-    uint16_t ui;
-
-    read_32(stream, &ui32);
-    if (ui32 != 0xCAFEBABE) {
-        errno = EIO;
-        return NULL;
-    }
-    read_16(stream, &ui);
-    read_16(stream, &ui);
-    read_16(stream, &ui);
-    uint16_t cpool_size = ui - 1;
-    ConstantPool pool = read_cp(cpool_size, stream);
-    read_16(stream, &ui);
-    read_16(stream, &ui);
-    char *name = *pool[ui - 1].info._class.name;
-    char *to_ret = malloc(strlen(name) + 1);
-
-    if (!to_ret) {
-        free(pool);
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    strcpy(to_ret, name);
-
-    for (uint16_t i = 0; i < cpool_size; i++) {
-        ConstantPoolEntry *entry = &pool[i];
-        if (entry->tag == CONSTANT_Utf8)
-            free(entry->info.utf8);
-    }
-    free(pool);
-
-    return to_ret;
-}
-
 char *InMemoryPeekClassName(void *stream)
 {
     int cursor = 0;
     if (stream == NULL)
     {
-        errno = EINVAL;
         return NULL;
     }
     uint32_t ui32;
@@ -377,14 +413,13 @@ char *InMemoryPeekClassName(void *stream)
 
     read_32_ptr(stream, &cursor, &ui32);
     if (ui32 != 0xCAFEBABE) {
-        errno = EIO;
         return NULL;
     }
     read_16_ptr(stream, &cursor, &ui);
     read_16_ptr(stream, &cursor, &ui);
     read_16_ptr(stream, &cursor, &ui);
     uint16_t cpool_size = ui - 1;
-    ConstantPool pool = read_cp(cpool_size, stream);
+    ConstantPool pool = read_cp_ptr(cpool_size, stream, &cursor);
     read_16_ptr(stream, &cursor, &ui);
     read_16_ptr(stream, &cursor, &ui);
     char *name = *pool[ui - 1].info._class.name;
@@ -392,7 +427,6 @@ char *InMemoryPeekClassName(void *stream)
 
     if (!to_ret) {
         free(pool);
-        errno = ENOMEM;
         return NULL;
     }
 

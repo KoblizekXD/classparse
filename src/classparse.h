@@ -6,7 +6,6 @@
     All of these constants are provided in little endian format(as opposed to ASM for example).
 */
 
-#include <stdio.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -567,6 +566,10 @@ struct _class_file {
 
 // ===================================================== FUNCTIONS
 
+#ifndef STANDALONE
+
+#include <stdio.h>
+
 /**
  * Attempts to read a standard JVM class file object from the given stream.
  * The class file is read in big endian format, but the `class_file` structure
@@ -582,19 +585,13 @@ struct _class_file {
 CLASSPARSE_EXPORT ClassFile *ReadFromStream(FILE *stream);
 
 /**
- * Attempts to read a standard JVM class file object from the given in-memory pointer.
+ * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
+ * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
  *
- * If reading fails, the program will probably crash due to read from unknown region(segfault).
- * You must ensure this doesn't happen, or if so, your program will not crash.
- *
- * @param ptr Pointer on where the reading should start.
+ * The way this works, is that the class is being read until it's `name` field, when it's reached,
+ * it is resolved and returned. Stream will not be closed automatically.
  */
-CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
-
-#ifndef MINIMAL
-
-#define OUTPUT_LE 0
-#define OUTPUT_BE 1
+CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
 
 /**
  * Writes a parsed classfile into a writable stream.
@@ -603,9 +600,19 @@ CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
  * @param stream The stream to write to.
  * @target Either OUTPUT_LE or OUTPUT_BE, resulting endianness of the classfile.
  */
-CLASSPARSE_EXPORT int WriteToStream(ClassFile *cf, FILE *stream, int target);
+// CLASSPARSE_EXPORT int WriteToStream(ClassFile *cf, FILE *stream, int target);
 
 #endif
+
+/**
+ * Attempts to read a standard JVM class file object from the given in-memory pointer.
+ *
+ * If reading fails, the program will probably crash due to read from unknown region(segfault).
+ * You must ensure this doesn't happen, or if so, your program will not crash.
+ *
+ * @param ptr Pointer on where the reading should start.
+ */
+CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
 
 /**
  * Frees given class file.
@@ -689,15 +696,6 @@ CLASSPARSE_EXPORT size_t GetParameterSize(Method *method, uint16_t offset);
  * in addition to `void` return type, which will have the `V` character.
  */
 CLASSPARSE_EXPORT char GetReturnType(Method *method);
-
-/**
- * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
- * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
- *
- * The way this works, is that the class is being read until it's `name` field, when it's reached,
- * it is resolved and returned. Stream will not be closed automatically.
- */
-CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
 
 /**
  * Returns a dynamically allocated pointer to a string containing the name of the class that was passed

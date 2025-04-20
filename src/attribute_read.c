@@ -1,13 +1,10 @@
 #include <classparse.h>
-#include <stdio.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
-extern int read_16(FILE *stream, uint16_t *var);
-extern int read_32(FILE *stream, uint32_t *var);
-extern int read_16_ptr(void *stream, int *cursor, uint16_t *var);
-extern int read_32_ptr(void *stream, int *cursor, uint32_t *var);
+extern int strcmp(const char *s1, const char *s2);
+extern void *memcpy(void *dest, const void *src, size_t len);
+extern void *malloc(size_t size);
 
 uint8_t translate_attribute_name(char *str)
 {
@@ -45,8 +42,15 @@ uint8_t translate_attribute_name(char *str)
     return ATTR_UNKNOWN;
 }
 
+#ifndef STANDALONE
+
+#include <stdio.h>
+#include <stdlib.h>
+
+extern int read_16(FILE *stream, uint16_t *var);
+extern int read_32(FILE *stream, uint32_t *var);
+
 Annotation _read_annotation(FILE *stream, ConstantPool pool);
-Annotation _read_annotation_ptr(void *at, int *cursor, ConstantPool pool);
 
 AttributeInfo *read_attributes(FILE *stream, ConstantPool pool, uint16_t length, void *declared_by)
 {
@@ -204,12 +208,18 @@ Annotation _read_annotation(FILE *stream, ConstantPool pool)
                 a.pairs[i].value.annotation = _read_annotation(stream, pool);
                 break;
             case '[':
-                fprintf(stderr, "Reading errors from annotation values is TODO!");
                 break;
         }
     }
     return a;
 }
+
+#endif // STANDALONE
+
+extern int read_16_ptr(void *stream, int *cursor, uint16_t *var);
+extern int read_32_ptr(void *stream, int *cursor, uint32_t *var);
+
+Annotation _read_annotation_ptr(void *at, int *cursor, ConstantPool pool);
 
 AttributeInfo *read_attributes_ptr(void *stream, int *cursor, ConstantPool pool, uint16_t length, void *declared_by)
 {
@@ -369,7 +379,7 @@ Annotation _read_annotation_ptr(void *stream, int *cursor, ConstantPool pool)
                 a.pairs[i].value.annotation = _read_annotation_ptr(stream, cursor, pool);
                 break;
             case '[':
-                fprintf(stderr, "Reading arrays from annotation values is TODO!");
+                // fprintf(stderr, "Reading arrays from annotation values is TODO!");
                 break;
         }
     }

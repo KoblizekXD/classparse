@@ -7,6 +7,7 @@ BUILD_DIR := build
 BIN_DIR := bin
 HEADER := $(SRC_DIR)/$(NAME).h
 MINIMAL ?= 0
+STANDALONE ?= 0
 
 # Toolchain Configuration
 CC.linux := gcc
@@ -78,6 +79,10 @@ CFLAGS += -I$(SRC_DIR)
 
 ifeq ($(MINIMAL),1)
 	CFLAGS += -DMINIMAL
+endif
+
+ifeq ($(STANDALONE),1)
+	CFLAGS += -DSTANDALONE
 endif
 
 # Phony Targets
