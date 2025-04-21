@@ -620,12 +620,13 @@ CLASSPARSE_EXPORT size_t CalculateRequiredSize(uint8_t *ptr);
 /**
  * Attempts to read a standard JVM class file object from the given in-memory pointer.
  *
- * If reading fails, the program will probably crash due to read from unknown region(segfault).
- * You must ensure this doesn't happen, or if so, your program will not crash.
+ * The provided buffer is used as a secure store, which can be easily freed on demand.
+ * Use function CalculateRequiredSize to return the size required for this buffer to be.
  *
  * @param ptr Pointer on where the reading should start.
+ * @param buffer The buffer where to store data required by ClassFile struct.
  */
-CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
+CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr, void *buffer, size_t buffer_size);
 
 // ========================================================== UTILITY FUNCTIONS
 

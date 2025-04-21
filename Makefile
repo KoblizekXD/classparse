@@ -77,12 +77,9 @@ LIBRARY := $(BIN_DIR)/lib$(NAME)$(EXT)
 
 CFLAGS += -I$(SRC_DIR)
 
-ifeq ($(MINIMAL),1)
-	CFLAGS += -DMINIMAL
-endif
-
-ifeq ($(STANDALONE),1)
-	CFLAGS += -DSTANDALONE
+ifeq ($(FREESTANDING),1)
+	CFLAGS += -ffreestanding -nostdlib
+	LDFLAGS += -ffreestanding -nostdlib
 endif
 
 # Phony Targets

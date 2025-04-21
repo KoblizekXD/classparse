@@ -5,7 +5,7 @@
 #include "utils.h"
 
 // Reads from the beginning of constant pool, returns the size required for string buffer in the classfile, this includes null terminators.
-static inline size_t string_size(uint8_t **stream, uint16_t count)
+size_t string_size(uint8_t **stream, uint16_t count)
 {
     size_t total = 0;
     for (size_t i = 0; i < count; i++) {
