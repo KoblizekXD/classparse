@@ -8,5 +8,5 @@ size_t sizeof_member(uint8_t **stream, ConstantPool pool)
 {
     skip(stream, 6);
     uint16_t attr_c = read_u16_ptr(stream);
-    return sizeof_attributes(stream, pool, attr_c);
+    return sizeof_attributes(stream, pool, attr_c) + (attr_c * sizeof(AttributeInfo));
 }

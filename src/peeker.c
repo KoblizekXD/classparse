@@ -151,7 +151,7 @@ size_t CalculateRequiredSize(uint8_t *ptr)
 {
     uint8_t *local_copy = ptr;
     size_t total = sizeof(ClassFile);
-    ptr += 8; 
+    local_copy += 8; 
     uint16_t cpsize = read_u16_ptr(&local_copy) - 1;
     uint8_t *another_copy = local_copy;
     size_t strbuf_len = string_size(&another_copy, cpsize);
@@ -164,9 +164,14 @@ size_t CalculateRequiredSize(uint8_t *ptr)
     total += if_count * sizeof(char*);
     uint16_t member_count = read_u16_ptr(&local_copy);
     total += sizeof(Field) * member_count;
-    total += sizeof_member(&local_copy, pool);
+    for (size_t i = 0; i < member_count; i++)
+        total += sizeof_member(&local_copy, pool);
     member_count = read_u16_ptr(&local_copy);
     total += sizeof(Method) * member_count;
-    total += sizeof_member(&local_copy, pool);
+    for (size_t i = 0; i < member_count; i++)
+        total += sizeof_member(&local_copy, pool);
+    member_count = read_u16_ptr(&local_copy);
+    total += sizeof_attributes(&local_copy, pool, member_count);
+    total += member_count * sizeof(AttributeInfo);
     return total;
 }

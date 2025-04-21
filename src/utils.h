@@ -45,7 +45,7 @@
 #endif
 
 
-void *classparse_memcpy(void* dest, const void* src, size_t n)
+static void *classparse_memcpy(void* dest, const void* src, size_t n)
 {
     char* d = (char*)dest;
     const char* s = (const char*)src;
@@ -67,7 +67,7 @@ void *classparse_memcpy(void* dest, const void* src, size_t n)
     return dest;
 }
 
-int classparse_strcmp(const char *s1, const char *s2)
+static int classparse_strcmp(const char *s1, const char *s2)
 {
     while (*s1 && (*s1 == *s2)) {
         s1++;
@@ -88,7 +88,7 @@ static inline uint32_t read_u32_ptr(uint8_t **stream)
 {
     uint32_t val;
     classparse_memcpy(&val, *stream, sizeof(uint32_t));
-    *stream+= sizeof(uint32_t);
+    *stream += sizeof(uint32_t);
     return TO_HOST_32(val);
 }
 

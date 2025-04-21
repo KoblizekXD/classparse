@@ -99,15 +99,18 @@ size_t sizeof_attributes(uint8_t **stream, ConstantPool pool, size_t attr_count)
     for (size_t i = 0; i < attr_count; i++) {
         ui = read_u16_ptr(stream);
         int synth = translate_attribute_name(pool[ui - 1].info.utf8);
-        ui = read_u16_ptr(stream);
+        ui = read_u32_ptr(stream);
         switch (synth) {
             case ATTR_CODE: {
                 skip(stream, 4);
                 uint32_t code_length = read_u32_ptr(stream);
                 total += code_length;
+                skip(stream, code_length);
                 ui = read_u16_ptr(stream);
                 total += sizeof(struct _exc_table) * ui;
+                skip(stream, 8 * ui);
                 ui = read_u16_ptr(stream);
+                total += (ui * sizeof(AttributeInfo));
                 total += sizeof_attributes(stream, pool, ui);
                 break;
             }
@@ -120,6 +123,7 @@ size_t sizeof_attributes(uint8_t **stream, ConstantPool pool, size_t attr_count)
             case ATTR_LINE_NUMBER_TABLE: {
                 ui = read_u16_ptr(stream);
                 total += sizeof(struct line_number_table) * ui;
+                skip(stream, 4 * ui);
                 break;
             }
             case ATTR_RUNTIME_INVISIBLE_ANNOTATIONS:
