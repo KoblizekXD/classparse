@@ -31,7 +31,10 @@ int main(int argc, char **argv)
     }
 
     fread(buffer, 1, file_size, file);
-    printf("Bytes required to allocate %s: %zu bytes\n", argv[1], CalculateRequiredSize(buffer));
+    size_t required = CalculateRequiredSize(buffer);
+    printf("Bytes required to allocate %s: %zu bytes\n", argv[1], required);
+    uint8_t cf_buffer[required];
+    ClassFile *cf = ReadFrom(buffer, cf_buffer, required);
     fclose(file);
     free(buffer);
     return 0;

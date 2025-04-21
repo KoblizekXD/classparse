@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 extern void read_constant_pool(uint8_t **stream, ConstantPoolEntry *buffer, size_t buffer_count, char *string_buffer);
+extern AttributeInfo *read_attributes(uint8_t **stream, size_t attr_c, ClassFile *cf, uint8_t **allocation_ptr, CodeAttribute *code);
 extern size_t string_size(uint8_t **stream, uint16_t count);
 
 ClassFile *ReadFrom(void *ptr, void *buffer, size_t buffer_size)
@@ -36,5 +37,6 @@ ClassFile *ReadFrom(void *ptr, void *buffer, size_t buffer_size)
 
     cf->method_count = read_u16_ptr(&stream);
     cf->attribute_count = read_u16_ptr(&stream);
+    cf->attributes = read_attributes(&stream, cf->attribute_count, cf, &allocation_cursor, NULL);
     return cf;
 }

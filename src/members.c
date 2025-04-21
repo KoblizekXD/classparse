@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 extern size_t sizeof_attributes(uint8_t **stream, ConstantPool pool, size_t attr_count);
+extern AttributeInfo *read_attributes(uint8_t **stream, size_t attr_c, ClassFile *cf, uint8_t **allocation_ptr, CodeAttribute *code);
 
 size_t sizeof_member(uint8_t **stream, ConstantPool pool)
 {
@@ -21,7 +22,7 @@ void set_fields(uint8_t **stream, ClassFile *cf, uint8_t **allocation_ptr)
         f->name = cf->constant_pool[read_u16_ptr(stream) - 1].info.utf8;
         f->descriptor = cf->constant_pool[read_u16_ptr(stream) - 1].info.utf8;
         f->attribute_count = read_u16_ptr(stream);
-
+        f->attributes = read_attributes(stream, f->attribute_count, cf, allocation_ptr, NULL);
     }
 }
 
@@ -35,6 +36,6 @@ void set_methods(uint8_t **stream, ClassFile *cf, uint8_t **allocation_ptr)
         m->name = cf->constant_pool[read_u16_ptr(stream) - 1].info.utf8;
         m->descriptor = cf->constant_pool[read_u16_ptr(stream) - 1].info.utf8;
         m->attribute_count = read_u16_ptr(stream);
-
+        m->attributes = read_attributes(stream, m->attribute_count, cf, allocation_ptr, NULL);
     }
 }

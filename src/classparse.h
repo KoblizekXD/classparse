@@ -389,7 +389,7 @@ typedef struct {
         uint8_t *end_pc;
         uint8_t *handler_pc;
         ClassInfo *catch_type;
-    } *exception_table;
+    } __attribute__((packed)) *exception_table;
     uint16_t attributes_count;
     AttributeInfo *attributes;
 } CodeAttribute;

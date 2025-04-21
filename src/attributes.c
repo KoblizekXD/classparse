@@ -140,3 +140,108 @@ size_t sizeof_attributes(uint8_t **stream, ConstantPool pool, size_t attr_count)
     }
     return total;
 }
+
+// Read ATTR_C attributes from stream
+AttributeInfo *read_attributes(uint8_t **stream, size_t attr_c, ClassFile *cf, uint8_t **allocation_ptr, CodeAttribute *code)
+{
+    AttributeInfo *start = (void*) *allocation_ptr;
+    *allocation_ptr += (sizeof(AttributeInfo) * attr_c);
+    for (size_t i = 0; i < attr_c; i++) {
+        AttributeInfo *info = &start[i];
+        info->attribute_name = cf->constant_pool[read_u16_ptr(stream) - 1].info.utf8;
+        info->synth_attribute_type = translate_attribute_name(info->attribute_name);
+        info->attribute_length = read_u32_ptr(stream);
+        switch (info->synth_attribute_type) {
+            case ATTR_CONSTANT_VALUE:
+                info->data.constant_value.value = &cf->constant_pool[read_u16_ptr(stream) - 1];
+                break;
+            case ATTR_NEST_HOST:
+                info->data.nest_host.host_class = &cf->constant_pool[read_u16_ptr(stream) - 1].info._class;
+                break;
+            case ATTR_SOURCE_FILE:
+                info->data.sourcefile.sourcefile = &cf->constant_pool[read_u16_ptr(stream) - 1].info.utf8;
+                break;
+            case ATTR_NEST_MEMBERS: {
+                info->data.nest_members.classes_length = read_u16_ptr(stream);
+                
+                info->data.nest_members.classes = (ClassInfo**)*allocation_ptr;
+                *allocation_ptr += sizeof(ClassInfo*) * info->data.nest_members.classes_length;
+                
+                for (uint16_t j = 0; j < info->data.nest_members.classes_length; j++) {
+                    uint16_t ui = read_u16_ptr(stream);
+                    info->data.nest_members.classes[j] = &cf->constant_pool[ui - 1].info._class;
+                }
+                break;
+            }
+            case ATTR_PERMITTED_SUBCLASSES: {
+                info->data.permitted_subclasses.classes_length = read_u16_ptr(stream);
+                
+                info->data.permitted_subclasses.classes = (ClassInfo**)*allocation_ptr;
+                *allocation_ptr += sizeof(ClassInfo*) * info->data.permitted_subclasses.classes_length;
+                
+                for (uint16_t j = 0; j < info->data.permitted_subclasses.classes_length; j++) {
+                    uint16_t ui = read_u16_ptr(stream);
+                    info->data.permitted_subclasses.classes[j] = &cf->constant_pool[ui - 1].info._class;
+                }
+                break;
+            }
+            case ATTR_LINE_NUMBER_TABLE:
+                info->data.line_number_table.line_number_table_length = read_u16_ptr(stream);
+                info->data.line_number_table.line_number_table = (void*) allocation_ptr;
+                for (size_t j = 0; j < info->data.line_number_table.line_number_table_length; j++) {
+                    info->data.line_number_table.line_number_table[j].start_pc = code->code + read_u16_ptr(stream);
+                    info->data.line_number_table.line_number_table[j].line_number = read_u16_ptr(stream);
+                }
+                *allocation_ptr += sizeof(struct line_number_table) * info->data.line_number_table.line_number_table_length;
+                break;
+            case ATTR_BOOTSTRAP_METHODS:
+                info->data.bootstrap_methods.bootstrap_method_count = read_u16_ptr(stream);
+                info->data.bootstrap_methods.bootstrap_methods = (struct bootstrap_method*) *allocation_ptr;
+                *allocation_ptr += sizeof(struct bootstrap_method) * info->data.bootstrap_methods.bootstrap_method_count;
+                for (uint16_t j = 0; j < info->data.bootstrap_methods.bootstrap_method_count; j++) {
+                    struct bootstrap_method *method = &info->data.bootstrap_methods.bootstrap_methods[j];
+                    
+                    uint16_t ui = read_u16_ptr(stream);
+                    method->bootstrap_method = &cf->constant_pool[ui - 1].info.mh;
+                    
+                    method->bootstrap_arg_length = read_u16_ptr(stream);
+                    method->bootstrap_args = (ConstantPoolEntry**)*allocation_ptr;
+                    *allocation_ptr += sizeof(ConstantPoolEntry*) * method->bootstrap_arg_length;
+                    
+                    for (uint16_t k = 0; k < method->bootstrap_arg_length; k++) {
+                        ui = read_u16_ptr(stream);
+                        method->bootstrap_args[k] = &cf->constant_pool[ui - 1];
+                    }
+                }
+                break;
+            case ATTR_CODE: {
+                info->data.code.max_stack = read_u16_ptr(stream);
+                info->data.code.max_locals = read_u16_ptr(stream);
+                info->data.code.code_length = read_u32_ptr(stream);
+                info->data.code.code = *allocation_ptr;
+                classparse_memcpy(info->data.code.code, *stream, info->data.code.code_length);
+                *allocation_ptr += info->data.code.code_length;
+                *stream += info->data.code.code_length;
+                info->data.code.exception_table_length = read_u16_ptr(stream);
+                info->data.code.exception_table = (void*) *allocation_ptr;
+                for (size_t j = 0; j < info->data.code.exception_table_length; j++) {
+                    info->data.code.exception_table[j].start_pc = info->data.code.code + read_u16_ptr(stream);
+                    info->data.code.exception_table[j].end_pc = info->data.code.code + read_u16_ptr(stream);
+                    info->data.code.exception_table[j].handler_pc = info->data.code.code + read_u16_ptr(stream);
+                    uint16_t ui = read_u16_ptr(stream);
+                    if (ui != 0)
+                        info->data.code.exception_table[j].catch_type = &cf->constant_pool[ui - 1].info._class;
+                    else 
+                        info->data.code.exception_table[j].catch_type = NULL;
+                }
+                info->data.code.attributes_count = read_u16_ptr(stream);
+                info->data.code.attributes = read_attributes(stream, info->data.code.attributes_count, cf, allocation_ptr, &info->data.code);
+                break;
+            }
+            default:
+                skip(stream, info->attribute_length);
+                break;
+        }
+    }
+    return start;
+}

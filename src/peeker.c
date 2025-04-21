@@ -157,6 +157,7 @@ size_t CalculateRequiredSize(uint8_t *ptr)
     size_t strbuf_len = string_size(&another_copy, cpsize);
     char string_buffer[strbuf_len];
     ConstantPoolEntry pool[cpsize];
+    total += (sizeof(ConstantPoolEntry) * cpsize) + strbuf_len;
     read_constant_pool(&local_copy, pool, cpsize, string_buffer);
     local_copy += 6;
     uint16_t if_count = read_u16_ptr(&local_copy);
