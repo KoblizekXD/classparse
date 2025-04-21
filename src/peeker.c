@@ -144,7 +144,10 @@ void read_constant_pool(uint8_t **stream, ConstantPoolEntry *buffer, size_t buff
     }
 }
 
-CLASSPARSE_EXPORT size_t CalculateRequiredSize(uint8_t *ptr)
+extern size_t sizeof_attributes(uint8_t **stream, ConstantPool pool, size_t attr_count);
+extern size_t sizeof_member(uint8_t **stream, ConstantPool pool);
+
+size_t CalculateRequiredSize(uint8_t *ptr)
 {
     uint8_t *local_copy = ptr;
     size_t total = sizeof(ClassFile);
@@ -158,7 +161,12 @@ CLASSPARSE_EXPORT size_t CalculateRequiredSize(uint8_t *ptr)
     local_copy += 6;
     uint16_t if_count = read_u16_ptr(&local_copy);
     local_copy += (sizeof(uint16_t) * if_count);
+    total += if_count * sizeof(char*);
     uint16_t member_count = read_u16_ptr(&local_copy);
-
+    total += sizeof(Field) * member_count;
+    total += sizeof_member(&local_copy, pool);
+    member_count = read_u16_ptr(&local_copy);
+    total += sizeof(Method) * member_count;
+    total += sizeof_member(&local_copy, pool);
     return total;
 }

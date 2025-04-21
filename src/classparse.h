@@ -398,7 +398,7 @@ typedef struct {
 
 typedef struct {
     uint16_t exception_length;
-    ClassInfo *exceptions;
+    ClassInfo **exceptions;
 } ExceptionsAttribute;
 
 typedef struct {
@@ -484,7 +484,7 @@ typedef struct _annotation_kv_pair {
         Annotation annotation;
         struct {
             uint16_t num_values;
-            struct element_value *values;
+            struct _annotation_kv_pair *values;
         } array_value;
     } value;
 } AnnotationKVPair;

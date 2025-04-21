@@ -67,6 +67,15 @@ void *classparse_memcpy(void* dest, const void* src, size_t n)
     return dest;
 }
 
+int classparse_strcmp(const char *s1, const char *s2)
+{
+    while (*s1 && (*s1 == *s2)) {
+        s1++;
+        s2++;
+    }
+    return *(const unsigned char *)s1 - *(const unsigned char *)s2;
+}
+
 static inline uint16_t read_u16_ptr(uint8_t **stream)
 {
     uint16_t val;
