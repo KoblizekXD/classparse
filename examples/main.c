@@ -35,6 +35,7 @@ int main(int argc, char **argv)
     printf("Bytes required to allocate %s: %zu bytes\n", argv[1], required);
     uint8_t cf_buffer[required];
     ClassFile *cf = ReadFrom(buffer, cf_buffer, required);
+    printf("%s\n", *cf->attributes[0].data.sourcefile.sourcefile);
     fclose(file);
     free(buffer);
     return 0;

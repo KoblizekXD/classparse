@@ -189,7 +189,7 @@ AttributeInfo *read_attributes(uint8_t **stream, size_t attr_c, ClassFile *cf, u
                 info->data.line_number_table.line_number_table_length = read_u16_ptr(stream);
                 info->data.line_number_table.line_number_table = (void*) allocation_ptr;
                 for (size_t j = 0; j < info->data.line_number_table.line_number_table_length; j++) {
-                    info->data.line_number_table.line_number_table[j].start_pc = code->code + read_u16_ptr(stream);
+                    info->data.line_number_table.line_number_table[j].start_pc = (uint8_t*)((uintptr_t)code->code + read_u16_ptr(stream));
                     info->data.line_number_table.line_number_table[j].line_number = read_u16_ptr(stream);
                 }
                 *allocation_ptr += sizeof(struct line_number_table) * info->data.line_number_table.line_number_table_length;
