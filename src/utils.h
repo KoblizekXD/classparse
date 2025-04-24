@@ -47,6 +47,55 @@ static inline uint32_t read_u32_ptr(uint8_t **stream)
     return swap_u32(value);
 }
 
+#if !defined(__freestanding__) || defined(CLASSPARSE_ALLOW_STRING_H)
+#include <string.h>
+#define classparse_strcmp strcmp
+#else
+
+static inline int classparse_strcmp(const char *s1, const char *s2)
+{
+    const unsigned char *p1 = (const unsigned char *)s1;
+    const unsigned char *p2 = (const unsigned char *)s2;
+
+    while (*p1 && *p1 == *p2) {
+        p1++;
+        p2++;
+    }
+    return *p1 - *p2;
+}
+
+static char *strchr(const char *s, int c)
+{
+    do {
+        if (*s == (char)c) {
+
+            return (char *)s;
+        }
+    } while (*s++);
+    return NULL;
+}
+
+static char *strrchr(const char *s, int c)
+{
+    const char *last = NULL;
+    do {
+        if (*s == (char)c) {
+            last = s;
+        }
+    } while (*s++);
+    return (char *)last;
+}
+
+static size_t strlen(const char *s)
+{
+    const char *p = s;
+    while (*p) {
+        p++;
+    }
+    return p - s;
+}
+
+#endif
 
 #define skip(PTR, N) *PTR += N
 
