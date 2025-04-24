@@ -187,12 +187,12 @@ AttributeInfo *read_attributes(uint8_t **stream, size_t attr_c, ClassFile *cf, u
             }
             case ATTR_LINE_NUMBER_TABLE:
                 info->data.line_number_table.line_number_table_length = read_u16_ptr(stream);
-                info->data.line_number_table.line_number_table = (void*) allocation_ptr;
+                info->data.line_number_table.line_number_table = (void*) *allocation_ptr;
+                *allocation_ptr += sizeof(struct line_number_table) * info->data.line_number_table.line_number_table_length;
                 for (size_t j = 0; j < info->data.line_number_table.line_number_table_length; j++) {
                     info->data.line_number_table.line_number_table[j].start_pc = (uint8_t*)((uintptr_t)code->code + read_u16_ptr(stream));
                     info->data.line_number_table.line_number_table[j].line_number = read_u16_ptr(stream);
                 }
-                *allocation_ptr += sizeof(struct line_number_table) * info->data.line_number_table.line_number_table_length;
                 break;
             case ATTR_BOOTSTRAP_METHODS:
                 info->data.bootstrap_methods.bootstrap_method_count = read_u16_ptr(stream);
@@ -242,6 +242,6 @@ AttributeInfo *read_attributes(uint8_t **stream, size_t attr_c, ClassFile *cf, u
                 skip(stream, info->attribute_length);
                 break;
         }
-    }
+    } 
     return start;
 }

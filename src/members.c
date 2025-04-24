@@ -37,5 +37,8 @@ void set_methods(uint8_t **stream, ClassFile *cf, uint8_t **allocation_ptr)
         m->descriptor = cf->constant_pool[read_u16_ptr(stream) - 1].info.utf8;
         m->attribute_count = read_u16_ptr(stream);
         m->attributes = read_attributes(stream, m->attribute_count, cf, allocation_ptr, NULL);
+        AttributeInfo *i = GetAttributeBySyntheticIdentifier(m->attributes, m->attribute_count, ATTR_CODE);
+        if (!i) m->code = NULL;
+        else m->code = &i->data.code;
     }
 }
