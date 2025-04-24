@@ -552,7 +552,7 @@ struct _class_file {
     uint16_t minor_version;
     uint16_t major_version;
     uint16_t access_flags;
-    uint16_t contant_pool_size;
+    uint16_t constant_pool_size;
     ConstantPool constant_pool;
     char *name;
     char *super_name;

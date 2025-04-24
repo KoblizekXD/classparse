@@ -219,7 +219,7 @@ AttributeInfo *read_attributes(uint8_t **stream, size_t attr_c, ClassFile *cf, u
                 info->data.code.max_locals = read_u16_ptr(stream);
                 info->data.code.code_length = read_u32_ptr(stream);
                 info->data.code.code = *allocation_ptr;
-                classparse_memcpy(info->data.code.code, *stream, info->data.code.code_length);
+                __builtin_memcpy(info->data.code.code, *stream, info->data.code.code_length);
                 *allocation_ptr += info->data.code.code_length;
                 *stream += info->data.code.code_length;
                 info->data.code.exception_table_length = read_u16_ptr(stream);
