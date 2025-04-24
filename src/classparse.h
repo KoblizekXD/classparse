@@ -628,6 +628,16 @@ CLASSPARSE_EXPORT size_t CalculateRequiredSize(uint8_t *ptr);
  */
 CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr, void *buffer, size_t buffer_size);
 
+struct utf_data { // Wrapper struct
+    size_t length;
+    char data[];
+};
+
+/**
+ * Returns a struct which references a name and length of given name of a class starting at given PTR.
+ */
+CLASSPARSE_EXPORT struct utf_data ClassNameOf(uint8_t *ptr);
+
 // ========================================================== UTILITY FUNCTIONS
 
 /**
