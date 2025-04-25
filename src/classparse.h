@@ -14,8 +14,10 @@
 #define CLASSPARSE_EXPORT EMSCRIPTEN_KEEPALIVE
 #elif defined(_WIN32)
 #define CLASSPARSE_EXPORT __declspec(dllexport)
-#else
+#elif defined(__GNUC__) && !defined(__freestanding__)
 #define CLASSPARSE_EXPORT __attribute__((visibility("default")))
+#else
+#define CLASSPARSE_EXPORT
 #endif
 
 // ===================================================== CONSTANTS
@@ -387,7 +389,7 @@ typedef struct {
         uint8_t *end_pc;
         uint8_t *handler_pc;
         ClassInfo *catch_type;
-    } *exception_table;
+    } __attribute__((packed)) *exception_table;
     uint16_t attributes_count;
     AttributeInfo *attributes;
 } CodeAttribute;
@@ -396,7 +398,7 @@ typedef struct {
 
 typedef struct {
     uint16_t exception_length;
-    ClassInfo *exceptions;
+    ClassInfo **exceptions;
 } ExceptionsAttribute;
 
 typedef struct {
@@ -482,7 +484,7 @@ typedef struct _annotation_kv_pair {
         Annotation annotation;
         struct {
             uint16_t num_values;
-            struct element_value *values;
+            struct _annotation_kv_pair *values;
         } array_value;
     } value;
 } AnnotationKVPair;
@@ -546,11 +548,10 @@ typedef struct {
 } Method;
 
 struct _class_file {
-    uint32_t magic;
     uint16_t minor_version;
     uint16_t major_version;
     uint16_t access_flags;
-    uint16_t contant_pool_size;
+    uint16_t constant_pool_size;
     ConstantPool constant_pool;
     char *name;
     char *super_name;
@@ -566,7 +567,7 @@ struct _class_file {
 
 // ===================================================== FUNCTIONS
 
-#ifndef STANDALONE
+#ifndef __freestanding__
 
 #include <stdio.h>
 
@@ -582,50 +583,38 @@ struct _class_file {
  *
  * @param stream The passing stream, must not be NULL.
  */
-CLASSPARSE_EXPORT ClassFile *ReadFromStream(FILE *stream);
+// CLASSPARSE_EXPORT ClassFile *ReadFromStream(FILE *stream);
+
+#endif // __freestanding__
 
 /**
- * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
- * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
- *
- * The way this works, is that the class is being read until it's `name` field, when it's reached,
- * it is resolved and returned. Stream will not be closed automatically.
+ * Returns a complete size required to allocate classfile starting at provided pointer. This
+ * includes space for all the strings. This also assumes that PTR is available at all times.
  */
-CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
-
-/**
- * Writes a parsed classfile into a writable stream.
- *
- * @param cf The classfile that will be written into a JVM-compatible structure.
- * @param stream The stream to write to.
- * @target Either OUTPUT_LE or OUTPUT_BE, resulting endianness of the classfile.
- */
-// CLASSPARSE_EXPORT int WriteToStream(ClassFile *cf, FILE *stream, int target);
-
-#endif
-
-/**
- * Returns a size required to allocate classfile stored at given pointer.
- */
-CLASSPARSE_EXPORT size_t CalculateRequiredSize(void *ptr);
+CLASSPARSE_EXPORT size_t CalculateRequiredSize(uint8_t *ptr);
 
 /**
  * Attempts to read a standard JVM class file object from the given in-memory pointer.
  *
- * If reading fails, the program will probably crash due to read from unknown region(segfault).
- * You must ensure this doesn't happen, or if so, your program will not crash.
+ * The provided buffer is used as a secure store, which can be easily freed on demand.
+ * Use function CalculateRequiredSize to return the size required for this buffer to be.
  *
  * @param ptr Pointer on where the reading should start.
+ * @param buffer The buffer where to store data required by ClassFile struct.
  */
-CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr);
+CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr, void *buffer, size_t buffer_size);
+
+struct utf_data { // Wrapper struct
+    size_t length;
+    char *data;
+};
 
 /**
- * Frees given class file.
- * No error will appear if operation fails.
- *
- * @param cf Classfile to free.
+ * Returns a struct which references a name and length of given name of a class starting at given PTR.
  */
-CLASSPARSE_EXPORT void FreeClassFile(ClassFile *cf);
+CLASSPARSE_EXPORT struct utf_data ClassNameOf(uint8_t *ptr);
+
+// ========================================================== UTILITY FUNCTIONS
 
 /**
  * Locates a method with the given name from the given classfile.
@@ -701,12 +690,6 @@ CLASSPARSE_EXPORT size_t GetParameterSize(Method *method, uint16_t offset);
  * in addition to `void` return type, which will have the `V` character.
  */
 CLASSPARSE_EXPORT char GetReturnType(Method *method);
-
-/**
- * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
- * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
- */
-CLASSPARSE_EXPORT char *InMemoryPeekClassName(void *stream);
 
 /**
  * Returns a string containing a name of the opcode in all uppercase(i.e. "ILOAD_1").
