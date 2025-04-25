@@ -14,8 +14,8 @@ ClassFile *ReadFrom(void *ptr, void *buffer, size_t buffer_size)
     uint8_t *stream = ptr;
     uint8_t *allocation_cursor = (uint8_t*) buffer + sizeof(ClassFile);
     ClassFile *cf = buffer;
-    cf->magic = read_u32_ptr(&stream);
-    if (cf->magic != 0xCAFEBABE) return NULL;
+    uint32_t magic = read_u32_ptr(&stream);
+    if (magic != 0xCAFEBABE) return NULL;
     cf->minor_version = read_u16_ptr(&stream);
     cf->major_version = read_u16_ptr(&stream);
     cf->constant_pool_size = read_u16_ptr(&stream) - 1;

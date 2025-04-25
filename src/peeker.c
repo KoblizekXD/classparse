@@ -61,6 +61,61 @@ size_t string_size(uint8_t **stream, uint16_t count)
     return total;
 }
 
+size_t skip_constant_pool(uint8_t **stream, uint16_t count)
+{
+    uint8_t *original = *stream;
+    for (size_t i = 0; i < count; i++) {
+        size_t tag = *(*stream)++;
+         switch (tag) {
+            case CONSTANT_Class:
+                skip(stream, 2);
+                break;
+            case CONSTANT_Fieldref:
+            case CONSTANT_InterfaceMethodref:
+            case CONSTANT_Methodref:
+                skip(stream, 4);
+                break;
+            case CONSTANT_String:
+                skip(stream, 2);
+                break;
+            case CONSTANT_Integer:
+            case CONSTANT_Float:
+                skip(stream, 4);
+                break;
+            case CONSTANT_Long:
+            case CONSTANT_Double:
+                skip(stream, 8);
+                i++;
+                break;
+            case CONSTANT_NameAndType:
+                skip(stream, 4);
+                break;
+            case CONSTANT_Utf8: {
+                uint16_t size = read_u16_ptr(stream);
+                skip(stream, size);
+                break;
+            }
+            case CONSTANT_MethodHandle:
+                skip(stream, 3);
+                break;
+            case CONSTANT_MethodType:
+                skip(stream, 2);
+                break;
+            case CONSTANT_Dynamic:
+            case CONSTANT_InvokeDynamic:
+                skip(stream, 4);
+                break;
+            case CONSTANT_Module:
+            case CONSTANT_Package:
+                skip(stream, 2);
+                break;
+            default:
+                return 0;
+        }
+    }
+    return (uintptr_t) *original - (uintptr_t) *stream;
+}
+
 void read_constant_pool(uint8_t **stream, ConstantPoolEntry *buffer, size_t buffer_count, char *string_buffer)
 {
     size_t stroffset = 0;
@@ -176,3 +231,70 @@ size_t CalculateRequiredSize(uint8_t *ptr)
     total += member_count * sizeof(AttributeInfo);
     return total;
 }
+
+struct utf_data lookup_string(uint8_t **stream, size_t target_idx)
+{
+    for (size_t i = 0; i <= target_idx; i++) {
+        size_t tag = *(*stream)++;
+         switch (tag) {
+            case CONSTANT_Class:
+                skip(stream, 2);
+                break;
+            case CONSTANT_Fieldref:
+            case CONSTANT_InterfaceMethodref:
+            case CONSTANT_Methodref:
+                skip(stream, 4);
+                break;
+            case CONSTANT_String:
+                skip(stream, 2);
+                break;
+            case CONSTANT_Integer:
+            case CONSTANT_Float:
+                skip(stream, 4);
+                break;
+            case CONSTANT_Long:
+            case CONSTANT_Double:
+                skip(stream, 8);
+                i++;
+                break;
+            case CONSTANT_NameAndType:
+                skip(stream, 4);
+                break;
+            case CONSTANT_Utf8: {
+                if (i == target_idx) return (struct utf_data) { .length = read_u16_ptr(stream), .data = (void*) *stream };
+                uint16_t size = read_u16_ptr(stream);
+                skip(stream, size);
+                break;
+            }
+            case CONSTANT_MethodHandle:
+                skip(stream, 3);
+                break;
+            case CONSTANT_MethodType:
+                skip(stream, 2);
+                break;
+            case CONSTANT_Dynamic:
+            case CONSTANT_InvokeDynamic:
+                skip(stream, 4);
+                break;
+            case CONSTANT_Module:
+            case CONSTANT_Package:
+                skip(stream, 2);
+                break;
+            default:
+                return (struct utf_data) {0};
+        }
+    }
+    return (struct utf_data) {0};
+}
+
+struct utf_data ClassNameOf(uint8_t *ptr)
+{
+    ptr += 8; 
+    uint16_t cpsize = read_u16_ptr(&ptr) - 1;
+    size_t pool_length = skip_constant_pool(&ptr, cpsize);
+    skip(&ptr, 2);
+    uint16_t index = read_u16_ptr(&ptr) - 1;
+    ptr = ptr - 4 - pool_length;
+    return lookup_string(&ptr, index);
+}
+

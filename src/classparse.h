@@ -548,7 +548,6 @@ typedef struct {
 } Method;
 
 struct _class_file {
-    uint32_t magic;
     uint16_t minor_version;
     uint16_t major_version;
     uint16_t access_flags;
@@ -584,30 +583,7 @@ struct _class_file {
  *
  * @param stream The passing stream, must not be NULL.
  */
-CLASSPARSE_EXPORT ClassFile *ReadFromStream(FILE *stream);
-
-/**
- * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
- * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
- *
- * The way this works, is that the class is being read until it's `name` field, when it's reached,
- * it is resolved and returned. Stream will not be closed automatically.
- */
-CLASSPARSE_EXPORT char *PeekClassName(FILE *stream);
-
-/**
- * Returns a dynamically allocated pointer to a string containing the name of the class that was passed
- * as a parameter. If given stream doesn't contain a valid class, NULL will be returned.
- */
-CLASSPARSE_EXPORT char *InMemoryPeekClassName(void *stream);
-
-/**
- * Frees given class file.
- * No error will appear if operation fails.
- *
- * @param cf Classfile to free.
- */
-CLASSPARSE_EXPORT void FreeClassFile(ClassFile *cf);
+// CLASSPARSE_EXPORT ClassFile *ReadFromStream(FILE *stream);
 
 #endif // __freestanding__
 
@@ -630,7 +606,7 @@ CLASSPARSE_EXPORT ClassFile *ReadFrom(void *ptr, void *buffer, size_t buffer_siz
 
 struct utf_data { // Wrapper struct
     size_t length;
-    char data[];
+    char *data;
 };
 
 /**
